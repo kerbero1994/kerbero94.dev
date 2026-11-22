@@ -1,0 +1,12 @@
+{
+  "name": "kerbero94.dev",
+  "private": true,
+  "scripts": {
+    "serve": "python3 -m http.server 8791 --bind 127.0.0.1 --directory site",
+    "check": "node checks/scan.cjs http://127.0.0.1:8791 checks/result.json"
+  },
+  "devDependencies": {
+    "axe-core": "4.14.1",
+    "playwright-core": "1.65.1"
+  }
+}

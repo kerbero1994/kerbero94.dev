@@ -27,4 +27,4 @@ netlify deploy --prod
 
 ## Checks
 
-Before each deploy: axe-core 4.14 on every page in all ten styles (WCAG 2.0–2.2, A and AA), plus the open style picker; no failed requests, no console errors, and no horizontal scroll at 390 px.
+`npm install`, then `npm run serve` in one terminal and `npm run check` in another (uses the installed Chrome). Before each deploy: axe-core 4.14 on every page in all ten styles (WCAG 2.0–2.2, A and AA), plus the open style picker; no failed requests, no console errors, and no horizontal scroll at 390 px.
