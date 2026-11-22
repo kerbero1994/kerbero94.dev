@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" id="theme-color" content="#FBF9F9">
+<title>Eduardo González: Senior Frontend Engineer, Accessibility</title>
+<meta name="description" content="Senior frontend engineer focused on accessibility. WCAG AAA at Drift; today leading SITIMM's web, app and admin panel with teams of AI agents.">
+<link rel="canonical" href="https://kerbero94.dev/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Eduardo González">
+<meta property="og:title" content="Eduardo González: Senior Frontend Engineer, Accessibility">
+<meta property="og:description" content="Senior frontend engineer focused on accessibility. WCAG AAA at Drift; today leading SITIMM's web, app and admin panel with teams of AI agents.">
+<meta property="og:url" content="https://kerbero94.dev/">
+<meta property="og:image" content="https://kerbero94.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Atkinson+Hyperlegible+Next:wght@400;700&family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Schibsted+Grotesk:wght@400;600;700&family=Gloock&family=Albert+Sans:wght@400;600&family=Aboreto&family=Josefin+Sans:wght@400;600&family=Jost:wght@400;500;700&family=Archivo+Black&family=Courier+Prime:wght@400;700&family=VT323&family=Architects+Daughter&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+
+/* ===== base compartida: el contrato de coherencia ===== */
+.site{
+  --bg:#fff;--fg:#111;--muted:#555;--accent:#00e;--accent-ink:#fff;--line:#0003;--ok:#1F9D55;
+  --font-body:system-ui,sans-serif;--font-display:var(--font-body);
+  --radius:0;--gap:clamp(1.25rem,3vw,2rem);--section:clamp(3rem,8vw,6rem);
+  position:relative;isolation:isolate;overflow:hidden;min-height:100vh;
+  padding:clamp(1.25rem,4vw,3.5rem);background:var(--bg);color:var(--fg);
+  font:400 1.0625rem/1.6 var(--font-body)}
+.site *{margin:0}
+.site ul,.site ol{list-style:none;padding:0}
+.site img{display:block;max-width:100%;height:auto}
+.site h1,.site h2,.site h3{font-family:var(--font-display);text-wrap:balance}
+.site h2{font-size:1.75rem;line-height:1.15}
+.site h3{font-size:1.35rem;line-height:1.25}
+.site p{text-wrap:pretty}
+.site .lede,.site .now p,.site .contact p,.site .case-body p{max-width:65ch}
+/* enlaces: subrayados dentro de un texto en los 10 estilos */
+.site a{color:inherit}
+.site p a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}
+.site p a:hover{text-decoration-thickness:2px}
+.site :focus-visible{outline:3px solid var(--focus,var(--accent));outline-offset:3px}
+.skip{position:absolute;top:-6rem;left:1rem;z-index:3;padding:.6rem 1rem;background:var(--fg);color:var(--bg)!important}
+.skip:focus{top:1rem}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* encabezado: tres zonas fijas en todos los estilos (nombre · navegación · preferencias) */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 2rem}
+.top .name{margin-right:auto;text-decoration:none}
+.top nav ul{display:flex;gap:.25rem 1.25rem}
+.top nav a{display:inline-flex;align-items:center;min-height:40px;text-decoration:none}
+.prefs{display:flex;align-items:center;gap:.5rem}
+.prefs a,.style-btn{display:inline-flex;align-items:center;gap:.5rem;min-height:40px;padding:0 .75rem;border:1px solid currentColor;border-radius:var(--radius);background:transparent;color:inherit;font:inherit;font-size:.95rem;text-decoration:none;cursor:pointer}
+.prefs a:hover,.style-btn:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.sw{display:inline-grid;place-items:center;flex:none;width:1.6rem;height:1.6rem;border:1px solid var(--fg);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:400 .8rem/1 var(--font-display);position:relative}
+.sw::after{content:"";position:absolute;right:-3px;bottom:-3px;width:.6rem;height:.6rem;border-radius:50%;background:var(--accent);outline:1px solid var(--bg)}
+
+/* selector de estilos: popover nativo con vista previa */
+.picker{inset:auto;top:5rem;right:1rem;width:min(34rem,calc(100vw - 2rem));max-height:calc(100vh - 6rem);overflow:auto;margin:0;padding:1.25rem;border:2px solid var(--fg);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:400 1rem/1.5 var(--font-body)}
+.picker h2{font-size:1.35rem}
+.picker-note{margin-top:.25rem;color:var(--muted)}
+.picker fieldset{margin:1rem 0 0;padding:0;border:0}
+.picker legend{padding:0;margin-bottom:.4rem;font-weight:700}
+.picker .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.4rem}
+.opt{position:relative;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.75rem;min-height:48px;padding:.45rem .6rem;border:1px solid transparent;border-radius:var(--radius);cursor:pointer}
+.opt:hover{background:color-mix(in srgb,var(--fg) 7%,transparent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt:has(input:checked){border-color:var(--fg)}
+.opt:has(input:focus-visible){outline:3px solid var(--focus,var(--accent));outline-offset:2px}
+.opt b{display:block;font-weight:700}
+.opt small{display:block;font-size:.85rem;color:var(--muted)}
+.opt:has(input:checked) b::after{content:" ✓" / ""}
+.opt .sw{width:2.6rem;height:2.6rem;font-size:1.15rem}
+.sw-auto{background:linear-gradient(135deg,#FBF9F9 50%,#0C0C0D 50%)!important;color:transparent!important}
+
+/* hero: quién, qué, disponible y cómo contactarlo, arriba del pliegue */
+.kicker{font-size:1rem;font-weight:600}
+.avail{display:flex;align-items:center;gap:.6rem;margin-top:1.25rem}
+.avail .dot{width:.65rem;height:.65rem;border-radius:50%;background:var(--ok);flex:none}
+.cta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem}
+.btn{display:inline-flex;align-items:center;gap:.5em;min-height:44px;padding:.55rem 1.1rem;border:2px solid currentColor;border-radius:var(--radius);color:inherit;font-weight:600;text-decoration:none;transition:background-color .15s ease-out,color .15s ease-out,transform .15s ease-out}
+:where(button).btn{background:transparent;font:inherit;cursor:pointer}
+.btn:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.btn:active{transform:translateY(1px)}
+/* .site a{color:inherit} outranks a lone class: anchor the button to .site */
+.site .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:color-mix(in srgb,var(--accent) 85%,var(--fg))}
+.btn-link{padding-inline:.4rem;border-color:transparent;text-decoration:underline;text-underline-offset:.2em}
+.btn .meta{font-weight:400;font-size:.85em;opacity:.85}
+
+.site main>section{margin-top:var(--section)}
+.site main>.hero{margin-top:clamp(2.5rem,7vw,5rem)}
+
+/* casos: filas grandes, el primero más grande; toda la fila es el enlace */
+.cases ul{display:grid;gap:clamp(2rem,5vw,3.5rem);margin-top:1.25rem}
+.case{position:relative;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:var(--gap)}
+.case-lead{grid-template-columns:3fr 2fr;align-items:end}
+.case:nth-child(2) .shot{order:2}
+.case:not(:has(.shot)){grid-template-columns:1fr}
+.shot img{width:100%;aspect-ratio:16/8;object-fit:cover;object-position:top}
+.case h3 a{text-decoration:none}
+.case h3 a::after{content:" →" / "";display:inline-block;transition:transform .2s cubic-bezier(.16,1,.3,1)}
+.case h3 a::before{content:"";position:absolute;inset:0;z-index:1}
+.case:hover h3 a{text-decoration:underline;text-underline-offset:.2em}
+.case:hover h3 a::after{transform:translateX(4px)}
+.case-body{display:grid;gap:.6rem}
+.case .meta{font-size:.9rem;color:var(--muted)}
+
+/* lecciones: lista a dos columnas, separadas por una línea; sin tarjetas */
+.lessons-lede{max-width:60ch;margin-top:.75rem;color:var(--muted)}
+.lesson-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));column-gap:var(--gap);margin-top:1.5rem}
+.lesson-list li{padding:1.1rem 0 1.3rem;border-top:1px solid var(--line)}
+.lesson-list h3{font-size:1.15rem;line-height:1.3;text-wrap:balance}
+.lesson-list p{max-width:60ch;margin-top:.45rem;text-wrap:pretty}
+
+.timeline{margin-top:1rem}
+.timeline li{display:grid;grid-template-columns:6rem 1fr 1.3fr;column-gap:1rem;padding:.8rem 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.timeline .yr,.timeline .role{color:var(--muted)}
+.timeline .co{font-weight:600}
+.contact .cta{margin-top:1.25rem}
+.foot{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:var(--section);padding-top:1.25rem;border-top:1px solid var(--line);font-size:.95rem;color:var(--muted)}
+.foot a{text-decoration:underline;text-underline-offset:.2em}
+
+/* ===== tokens por estilo (también los usa la miniatura del selector) ===== */
+[data-style=classic]{--bg:#FBF9F9;--fg:#1C1718;--muted:#5A5254;--accent:#8A2432;--accent-ink:#fff;--line:#1C171826;--font-display:"Bodoni Moda",serif;--font-body:"Atkinson Hyperlegible Next",sans-serif}
+[data-style=swiss]{--bg:#FFFFFF;--fg:#111111;--muted:#4D4D4D;--accent:#D0021B;--accent-ink:#fff;--line:#111;--font-display:"Schibsted Grotesk",sans-serif;--font-body:"Schibsted Grotesk",sans-serif}
+[data-style=noir]{--bg:#0C0C0D;--fg:#ECE8E1;--muted:#B3AEA6;--accent:#F0A63A;--accent-ink:#0C0C0D;--line:#2E2C29;--font-display:Gloock,serif;--font-body:"Albert Sans",sans-serif}
+[data-style=deco]{--bg:#0F1F1C;--fg:#EFE6D2;--muted:#CFC2A3;--accent:#D9B46A;--accent-ink:#0F1F1C;--line:#D9B46A59;--font-display:Aboreto,serif;--font-body:"Josefin Sans",sans-serif}
+[data-style=brutal]{--bg:#E8E8E3;--fg:#000;--muted:#000;--accent:#0000EE;--accent-ink:#fff;--line:#000;--focus:#000;--font-display:Arial,"Helvetica Neue",Helvetica,sans-serif;--font-body:"Times New Roman",Times,serif}
+[data-style=bauhaus]{--bg:#F2F3F5;--fg:#141414;--muted:#3A3A3A;--accent:#C8281E;--accent-ink:#fff;--blue:#1E4FA3;--yellow:#F2B705;--line:#141414;--font-display:Jost,sans-serif;--font-body:Jost,sans-serif}
+[data-style=riso]{--bg:#F7F6F6;--fg:#22306A;--muted:#33427E;--accent:#FF48B0;--accent-ink:#22306A;--tint:#FFC2E0;--line:#22306A;--font-display:"Archivo Black",sans-serif;--font-body:"Courier Prime",monospace}
+[data-style=terminal]{--bg:#0B0F0B;--fg:#A9F5A0;--muted:#7FCF77;--accent:#FFB000;--accent-ink:#0B0F0B;--line:#2A3F2A;--font-display:VT323,monospace;--font-body:"Atkinson Hyperlegible Mono",monospace}
+[data-style=blueprint]{--bg:#123F7C;--fg:#F4F7FF;--muted:#C9D8F2;--accent:#FFD866;--accent-ink:#123F7C;--line:#F4F7FF80;--font-display:"Architects Daughter",cursive;--font-body:"Martian Mono",monospace}
+[data-style=retro]{--bg:#007373;--fg:#000;--muted:#1A1A1A;--accent:#000080;--accent-ink:#fff;--line:#808080;--focus:#000;--font-display:Verdana,Tahoma,sans-serif;--font-body:Verdana,Tahoma,sans-serif}
+
+/* ===== 1. New classic: libro de imprenta universitaria, no revista ===== */
+.site[data-style=classic]{font-size:1.125rem;line-height:1.65}
+.site[data-style=classic] .inner{max-width:46rem;margin-inline:auto}
+.site[data-style=classic] .name{font:600 1.35rem/1 var(--font-display)}
+.site[data-style=classic] .kicker{color:var(--muted);font-weight:700}
+.site[data-style=classic] h1{margin-top:.75rem;font-size:clamp(2.75rem,6.5vw,4.75rem);font-weight:500;line-height:1.02;letter-spacing:-.01em;font-variation-settings:"opsz" 96}
+.site[data-style=classic] h1 em{font-style:italic;color:var(--accent)}
+.site[data-style=classic] .lede{margin-top:1.25rem;font-size:1.25rem;color:var(--muted)}
+.site[data-style=classic] h2{font-size:2rem;font-weight:600}
+.site[data-style=classic] h3{font-size:1.5rem;font-weight:600}
+.site[data-style=classic] .case{grid-template-columns:1fr}
+.site[data-style=classic] .case .shot{order:0}
+.site[data-style=classic] .timeline li{grid-template-columns:5.5rem 1fr}
+.site[data-style=classic] .timeline .yr{grid-row:span 2}
+.site[data-style=classic] .timeline .co{font:600 1.2rem/1.3 var(--font-display)}
+
+/* ===== 2. Suizo: póster de Müller-Brockmann, rejilla de 12 ===== */
+.site[data-style=swiss] .inner{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:1.25rem}
+.site[data-style=swiss] .top,.site[data-style=swiss] main,.site[data-style=swiss] .foot{grid-column:1/-1}
+.site[data-style=swiss] main,.site[data-style=swiss] .hero{display:grid;grid-template-columns:subgrid}
+.site[data-style=swiss] .top{padding-top:.6rem;border-top:2px solid var(--fg);font-weight:600}
+.site[data-style=swiss] .name{font-weight:700}
+.site[data-style=swiss] .hero,.site[data-style=swiss] .cases,.site[data-style=swiss] .lessons,.site[data-style=swiss] .work{grid-column:1/-1}
+.site[data-style=swiss] .hero>*{grid-column:5/-1}
+.site[data-style=swiss] .hero>.kicker,.site[data-style=swiss] .hero>h1{grid-column:1/-1}
+.site[data-style=swiss] h1{margin:.75rem 0 1.5rem;font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:.95;letter-spacing:-.04em}
+.site[data-style=swiss] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=swiss] .lede{font-size:1.25rem;line-height:1.4}
+.site[data-style=swiss] .now,.site[data-style=swiss] .contact{grid-column:5/-1}
+.site[data-style=swiss] h2{padding-top:.5rem;border-top:2px solid var(--fg);font-weight:700;letter-spacing:-.01em}
+.site[data-style=swiss] h3{font-weight:700;letter-spacing:-.02em}
+.site[data-style=swiss] .timeline li{border-top-color:var(--fg)}
+.site[data-style=swiss] .timeline .co{font-weight:700}
+.site[data-style=swiss] .now p{font-size:1.5rem;font-weight:500;line-height:1.3}
+
+/* ===== 3. Noir: cuadernillo de Criterion ===== */
+.site[data-style=noir]{line-height:1.75}
+.site[data-style=noir] .inner{max-width:76rem;margin-inline:auto}
+.site[data-style=noir] .name{font:400 1.4rem/1 var(--font-display)}
+.site[data-style=noir] main{display:grid;grid-template-columns:1fr 2fr;column-gap:clamp(2rem,6vw,6rem)}
+.site[data-style=noir] main>section{grid-column:1/-1}
+.site[data-style=noir] .now,.site[data-style=noir] .lessons,.site[data-style=noir] .work,.site[data-style=noir] .contact{display:grid;grid-template-columns:subgrid;align-items:start}
+.site[data-style=noir] .now>*,.site[data-style=noir] .lessons>*,.site[data-style=noir] .work>*,.site[data-style=noir] .contact>*{grid-column:2}
+.site[data-style=noir] .now>h2,.site[data-style=noir] .lessons>h2,.site[data-style=noir] .work>h2,.site[data-style=noir] .contact>h2{grid-column:1}
+.site[data-style=noir] .hero{margin-top:clamp(3rem,10vh,7rem)}
+.site[data-style=noir] .kicker{color:var(--accent)}
+.site[data-style=noir] h1{max-width:14ch;margin-top:1rem;font-size:clamp(3rem,8vw,6rem);font-weight:400;line-height:.98;letter-spacing:-.02em}
+.site[data-style=noir] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=noir] .lede{margin-top:1.75rem;font-size:1.15rem;color:var(--muted)}
+.site[data-style=noir] h2{font-size:2rem;font-weight:400}
+.site[data-style=noir] h3{font-size:1.6rem;font-weight:400}
+.site[data-style=noir] .now p{font:400 1.6rem/1.35 var(--font-display)}
+.site[data-style=noir] .timeline{margin-top:0}
+.site[data-style=noir] .timeline .yr{color:var(--accent)}
+.site[data-style=noir] .timeline .co{font:400 1.25rem/1.3 var(--font-display)}
+.site[data-style=noir] .shot img{filter:grayscale(1) contrast(1.1)}
+
+/* ===== 4. Art Deco: vestíbulo del Chrysler, simetría y oro ===== */
+.site[data-style=deco]{font-size:1.125rem;line-height:1.75}
+.site[data-style=deco] .inner{max-width:58rem;margin-inline:auto;padding:clamp(1.25rem,4vw,3rem);border:1px solid var(--accent);outline:1px solid var(--accent);outline-offset:6px}
+.site[data-style=deco] .name{font:400 1.25rem/1 var(--font-display);letter-spacing:.15em;color:var(--accent)}
+.site[data-style=deco] .hero,.site[data-style=deco] .now,.site[data-style=deco] .contact{text-align:center}
+.site[data-style=deco] .hero{position:relative;padding-top:2rem}
+.site[data-style=deco] .hero::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:min(46rem,120%);aspect-ratio:2/1;translate:-50% 0;border-radius:999px 999px 0 0;background:repeating-conic-gradient(from -90deg at 50% 100%,#D9B46A21 0 3deg,transparent 3deg 9deg)}
+.site[data-style=deco] .kicker{color:var(--accent);letter-spacing:.2em;text-transform:uppercase;font-size:.9rem}
+.site[data-style=deco] h1{margin-top:1rem;font-size:clamp(2.2rem,5.5vw,4.2rem);font-weight:400;line-height:1.15;letter-spacing:.04em}
+.site[data-style=deco] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=deco] .lede,.site[data-style=deco] .now p,.site[data-style=deco] .contact p{margin-inline:auto}
+.site[data-style=deco] .lede{margin-top:1.5rem;color:var(--muted)}
+.site[data-style=deco] .avail,.site[data-style=deco] .cta{justify-content:center}
+.site[data-style=deco] h2{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;font-size:1.5rem;font-weight:400;letter-spacing:.15em;color:var(--accent)}
+.site[data-style=deco] h2::before,.site[data-style=deco] h2::after{content:"";flex:1;height:5px;border-block:1px solid var(--accent)}
+.site[data-style=deco] h3{font-size:1.2rem;font-weight:400;letter-spacing:.06em;color:var(--accent)}
+.site[data-style=deco] .shot{padding:6px;border:1px solid var(--accent)}
+.site[data-style=deco] .shot img{filter:sepia(.35) contrast(1.05)}
+.site[data-style=deco] .timeline li{grid-template-columns:1fr 11rem 1fr;align-items:baseline}
+.site[data-style=deco] .timeline .yr{text-align:right;color:var(--accent)}
+.site[data-style=deco] .timeline .co{font:400 1.05rem/1.3 var(--font-display);letter-spacing:.08em;text-align:center}
+
+/* ===== 5. Brutalismo: HTML crudo, fuentes del sistema, cero descargas ===== */
+.site[data-style=brutal]{font-size:1.125rem;line-height:1.5}
+.site[data-style=brutal] .top,.site[data-style=brutal] main>section{padding:1rem 1.25rem;background:#fff;border:3px solid #000}
+.site[data-style=brutal] .name{font:900 1.1rem/1 var(--font-display);text-transform:uppercase}
+.site[data-style=brutal] .top nav a,.site[data-style=brutal] .foot a,.site[data-style=brutal] p a{color:var(--accent);text-decoration:underline}
+.site[data-style=brutal] .top nav a:visited,.site[data-style=brutal] p a:visited{color:#551A8B}
+.site[data-style=brutal] .prefs a,.site[data-style=brutal] .style-btn{border-width:3px;background:#fff}
+.site[data-style=brutal] main{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-top:1rem}
+.site[data-style=brutal] main>section{margin-top:0}
+.site[data-style=brutal] .cases,.site[data-style=brutal] .lessons,.site[data-style=brutal] .work,.site[data-style=brutal] .contact{grid-column:1/-1}
+.site[data-style=brutal] .kicker{display:inline-block;padding:.1rem .5rem;background:#000;color:#fff}
+.site[data-style=brutal] h1{margin-top:1rem;font-size:clamp(2.2rem,5.5vw,4.4rem);font-weight:900;line-height:1;letter-spacing:-.02em;text-transform:uppercase}
+.site[data-style=brutal] h1 em{font-style:normal;padding:0 .15em;background:#FFE500}
+.site[data-style=brutal] .lede{margin-top:1.25rem}
+.site[data-style=brutal] h2{font-size:1.6rem;font-weight:900;text-transform:uppercase}
+.site[data-style=brutal] h2::before{content:"// " / ""}
+.site[data-style=brutal] h3{font-weight:700}
+.site[data-style=brutal] h3 a{color:var(--accent);text-decoration:underline}
+.site[data-style=brutal] main>.now{background:#000;color:#fff}
+.site[data-style=brutal] main>.now p a{color:#9DB8FF}
+.site[data-style=brutal] .btn{border-width:3px;background:#fff;color:#000}
+.site[data-style=brutal] .btn-primary{background:var(--accent);border-color:#000;color:#fff}
+.site[data-style=brutal] .btn:hover{background:#FFE500;color:#000}
+.site[data-style=brutal] .btn-link{border-color:transparent;background:transparent;color:var(--accent)}
+.site[data-style=brutal] .shot{border:3px solid #000}
+.site[data-style=brutal] .timeline li{border-top:2px solid #000}
+.site[data-style=brutal] .timeline .co{font-family:var(--font-display);font-weight:700}
+.site[data-style=brutal] :focus-visible{outline:4px solid #000;outline-offset:2px;background:#FFE500;color:#000}
+
+/* ===== 6. Bauhaus: cartel de Bayer, forma y color primario ===== */
+.site[data-style=bauhaus] .inner{max-width:72rem;margin-inline:auto}
+.site[data-style=bauhaus] .name{font-size:1.25rem;font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] .top nav a{text-transform:lowercase}
+.site[data-style=bauhaus] .hero{position:relative;min-height:28rem;padding-right:36%}
+.site[data-style=bauhaus] .hero::before{content:"";position:absolute;right:6%;top:0;width:min(22rem,28%);aspect-ratio:1;border-radius:50%;background:var(--accent)}
+.site[data-style=bauhaus] .hero::after{content:"";position:absolute;right:0;bottom:0;width:min(16rem,20%);aspect-ratio:1;background:var(--blue);clip-path:polygon(0 100%,100% 100%,100% 0)}
+.site[data-style=bauhaus] .kicker{font-weight:500}
+.site[data-style=bauhaus] h1{margin-top:1rem;font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:.95;letter-spacing:-.03em;text-transform:lowercase}
+.site[data-style=bauhaus] h1 em{font-style:normal;color:var(--blue)}
+.site[data-style=bauhaus] .lede{margin-top:1.5rem;font-size:1.2rem}
+.site[data-style=bauhaus] h2{font-size:2rem;font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] h3{font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] .now{padding:1.75rem;background:var(--yellow)}
+.site[data-style=bauhaus] .now p{font-size:1.4rem;font-weight:500;line-height:1.35}
+.site[data-style=bauhaus] .timeline li{border-top:2px solid var(--fg)}
+.site[data-style=bauhaus] .timeline .yr{font-weight:700;color:var(--blue)}
+.site[data-style=bauhaus] .timeline .co{font-weight:700}
+.site[data-style=bauhaus] .case:nth-child(2) .shot{border:10px solid var(--blue)}
+.site[data-style=bauhaus] .case-lead .shot{border:10px solid var(--accent)}
+
+/* ===== 7. Risograph: fanzine a dos tintas ===== */
+.site[data-style=riso]::after{content:"";position:absolute;z-index:-1;right:-6rem;bottom:-6rem;width:28rem;aspect-ratio:1;border-radius:50%;opacity:.6;background:radial-gradient(var(--accent) 35%,transparent 37%) 0 0/12px 12px}
+.site[data-style=riso] .inner{max-width:68rem;margin-inline:auto}
+.site[data-style=riso] .name{font:400 1.1rem/1 var(--font-display);text-transform:uppercase}
+.site[data-style=riso] .kicker{display:inline-block;padding:.15rem .6rem;background:var(--tint);transform:rotate(-2deg)}
+.site[data-style=riso] h1{margin-top:1rem;font-size:clamp(2.8rem,7vw,6rem);font-weight:400;line-height:.95;letter-spacing:-.02em;text-transform:uppercase;text-shadow:.06em .04em 0 var(--accent);mix-blend-mode:multiply}
+.site[data-style=riso] h1 em{font-style:normal;background:linear-gradient(transparent 55%,var(--tint) 55%)}
+.site[data-style=riso] .lede{margin-top:1.5rem}
+.site[data-style=riso] h2{font-size:1.75rem;font-weight:400;text-transform:uppercase;text-shadow:.06em .05em 0 var(--accent)}
+.site[data-style=riso] h3{font-size:1.2rem;font-weight:400;text-transform:uppercase}
+.site[data-style=riso] .btn-primary{background:var(--fg);border-color:var(--fg);color:#fff}
+.site[data-style=riso] .now{padding:1.25rem 1.5rem;background:var(--tint);transform:rotate(-1deg)}
+.site[data-style=riso] .shot{background:var(--tint)}
+.site[data-style=riso] .shot img{filter:grayscale(1) contrast(1.2);mix-blend-mode:multiply}
+.site[data-style=riso] .case:nth-child(2){transform:rotate(1deg)}
+.site[data-style=riso] .timeline li{border-top:2px dotted var(--fg)}
+.site[data-style=riso] .timeline .co{font-weight:700}
+
+/* ===== 8. Terminal: manual de un VT100 ===== */
+.site[data-style=terminal]{text-shadow:0 0 6px #78FF7859}
+.site[data-style=terminal] .inner{max-width:62rem;margin-inline:auto}
+.site[data-style=terminal] .name::before{content:"~/" / "";color:var(--muted)}
+.site[data-style=terminal] .top nav a::before{content:"[" / ""}
+.site[data-style=terminal] .top nav a::after{content:"]" / ""}
+.site[data-style=terminal] .kicker{color:var(--muted);font-weight:400}
+.site[data-style=terminal] .kicker::before{content:"> " / "";color:var(--accent)}
+.site[data-style=terminal] h1{margin-top:.75rem;font-size:clamp(3rem,7vw,6rem);font-weight:400;line-height:1;color:#D6FFD0}
+.site[data-style=terminal] h1 em{font-style:normal;color:var(--accent)}
+/* el cursor parpadea 3 s y se queda fijo: WCAG 2.2.2 pide pausa si dura más de 5 s */
+.site[data-style=terminal] h1::after{content:"█" / "";animation:pf-blink 1s steps(1) 3}
+@keyframes pf-blink{50%{opacity:0}}
+.site[data-style=terminal] .lede{margin-top:1.5rem}
+.site[data-style=terminal] h2{font-size:2.1rem;font-weight:400;color:var(--accent);text-transform:lowercase}
+.site[data-style=terminal] h2::before{content:"$ cat " / "";color:var(--muted)}
+.site[data-style=terminal] h2::after{content:".md" / ""}
+.site[data-style=terminal] h3{font-size:1.6rem;font-weight:400}
+.site[data-style=terminal] .btn{border-width:1px}
+.site[data-style=terminal] .btn::before{content:"[" / ""}
+.site[data-style=terminal] .btn::after{content:"]" / ""}
+.site[data-style=terminal] .btn-primary{background:var(--fg);border-color:var(--fg);color:var(--bg);text-shadow:none}
+.site[data-style=terminal] .shot{border:1px dashed var(--line)}
+.site[data-style=terminal] .shot img{filter:grayscale(1) sepia(1) hue-rotate(60deg) saturate(2.5) brightness(.8)}
+.site[data-style=terminal] .timeline li{border-top-style:dashed}
+.site[data-style=terminal] .timeline .yr{color:var(--accent)}
+
+/* ===== 9. Blueprint: lámina de arquitecto (guiño a la etapa de arquitectura) ===== */
+.site[data-style=blueprint]{font-size:1rem;background-image:linear-gradient(#ffffff12 1px,transparent 1px),linear-gradient(90deg,#ffffff12 1px,transparent 1px),linear-gradient(#ffffff24 1px,transparent 1px),linear-gradient(90deg,#ffffff24 1px,transparent 1px);background-size:20px 20px,20px 20px,100px 100px,100px 100px}
+.site[data-style=blueprint] .inner{max-width:70rem;margin-inline:auto;counter-reset:fig}
+.site[data-style=blueprint] .top{padding-bottom:.75rem;border-bottom:1px solid var(--line)}
+.site[data-style=blueprint] .name{font:400 1.45rem/1 var(--font-display)}
+.site[data-style=blueprint] .prefs a,.site[data-style=blueprint] .style-btn,.site[data-style=blueprint] .btn{border-style:dashed}
+.site[data-style=blueprint] main>section{padding:1.5rem;border:1px dashed var(--line);counter-increment:fig}
+.site[data-style=blueprint] .kicker{color:var(--accent);font-weight:400}
+.site[data-style=blueprint] h1{margin-top:.75rem;font-size:clamp(2.6rem,6vw,5.2rem);font-weight:400;line-height:1.05}
+.site[data-style=blueprint] h1 em{font-style:normal;color:var(--accent);text-decoration:underline 2px;text-underline-offset:.15em}
+.site[data-style=blueprint] h1::after{content:"←— elevation A · scale 1:1 —→" / "";display:block;margin-top:.75rem;font:400 .8rem/1 var(--font-body);letter-spacing:.1em;color:var(--muted)}
+.site[data-style=blueprint] .lede{margin-top:1.25rem;color:var(--muted)}
+.site[data-style=blueprint] h2{font-size:1.9rem;font-weight:400}
+.site[data-style=blueprint] h2::before{content:"A-0" counter(fig) "  " / "";font:600 .8rem/1 var(--font-body);letter-spacing:.1em;color:var(--accent);vertical-align:middle}
+.site[data-style=blueprint] h3{font-size:1.5rem;font-weight:400}
+.site[data-style=blueprint] .btn-primary{border-style:solid}
+.site[data-style=blueprint] .shot{border:1px dashed var(--line);background:var(--bg)}
+.site[data-style=blueprint] .shot img{filter:grayscale(1) contrast(1.15);mix-blend-mode:luminosity;opacity:.9}
+.site[data-style=blueprint] .timeline li{border-top-style:dashed}
+.site[data-style=blueprint] .timeline .yr{color:var(--accent)}
+.site[data-style=blueprint] .foot{border:1px solid var(--line);padding:.75rem 1rem}
+.site[data-style=blueprint] .foot::after{content:"SHEET 01/01 · REV. 2026" / "";margin-left:auto;letter-spacing:.1em;color:var(--accent)}
+
+/* ===== 10. Retro OS: escritorio de los 90, cada sección es una ventana ===== */
+.site[data-style=retro]{font-size:1rem;line-height:1.5}
+.site[data-style=retro] .inner{max-width:74rem;margin-inline:auto}
+.site[data-style=retro] .top{padding:.3rem .5rem;background:#C0C0C0;border:2px outset #e8e8e8}
+.site[data-style=retro] .name{padding:.2rem .6rem;border:2px outset #e8e8e8;font-weight:700}
+.site[data-style=retro] .name::before{content:"◧ " / ""}
+.site[data-style=retro] .prefs a,.site[data-style=retro] .style-btn,.site[data-style=retro] .btn{border:2px outset #e8e8e8;background:#C0C0C0;color:#000}
+.site[data-style=retro] .btn:active,.site[data-style=retro] .style-btn:active{border-style:inset;transform:none}
+.site[data-style=retro] .btn-primary{outline:1px solid #000;font-weight:700}
+.site[data-style=retro] .style-btn .sw{color:#fff}
+.site[data-style=retro] .btn-link{border:0;background:transparent;color:var(--accent)}
+.site[data-style=retro] main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1.5rem;margin-top:2rem}
+.site[data-style=retro] main>section{margin-top:0;padding:3px 3px 1.1rem;background:#C0C0C0;border:2px outset #e8e8e8}
+.site[data-style=retro] main>section>*:not(h2):not(.kicker){margin-inline:1rem}
+.site[data-style=retro] h2,.site[data-style=retro] .kicker{display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;padding:.3rem .6rem;background:linear-gradient(90deg,#000080,#1084D0);color:#fff;font:700 1.15rem/1.3 var(--font-display)}
+.site[data-style=retro] h2::after,.site[data-style=retro] .kicker::after{content:"_ □ ×" / "";letter-spacing:.3em;font-weight:400}
+.site[data-style=retro] .hero{grid-column:1/9}
+.site[data-style=retro] .now{grid-column:9/-1;align-self:start;margin-top:4rem!important}
+.site[data-style=retro] .lessons{grid-column:1/-1}
+.site[data-style=brutal] .lesson-list,.site[data-style=swiss] .lesson-list{grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr))}
+.site[data-style=retro] .cases{grid-column:1/-1}
+.site[data-style=retro] .work{grid-column:1/9}
+.site[data-style=retro] .contact{grid-column:9/-1;align-self:start}
+.site[data-style=retro] h1{margin-block:1rem .5rem;font-size:clamp(2rem,4.5vw,3.4rem);font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.site[data-style=retro] h1 em{padding:0 .2em;font-style:normal;background:#000080;color:#fff}
+.site[data-style=retro] .shot{border:2px inset #e8e8e8}
+.site[data-style=retro] .timeline{background:#fff;border:2px inset #e8e8e8}
+.site[data-style=retro] .timeline li{padding:.4rem .6rem;border-top-color:#C0C0C0}
+.site[data-style=retro] .timeline .yr,.site[data-style=retro] .timeline .role{color:#000}
+.site[data-style=retro] h3 a{color:var(--accent);text-decoration:underline}
+.site[data-style=retro] .foot,.site[data-style=retro] .foot a{color:#fff;border-top-color:#ffffff80}
+.site[data-style=retro] :focus-visible{outline:2px dotted #000;outline-offset:2px}
+
+/* ===================== MOVIMIENTO =====================
+   Solo CSS y lo que trae el navegador. Con «reducir movimiento» todo es instantáneo. */
+.site{--ease-out-quart:cubic-bezier(.25,1,.5,1);--ease-out-quint:cubic-bezier(.22,1,.36,1);--ease-out-expo:cubic-bezier(.16,1,.3,1)}
+
+/* --- micro-interacciones: iguales en los 10 estilos (100–300 ms) --- */
+.btn{transition:background-color .15s ease-out,color .15s ease-out,transform .1s ease-out}
+.btn:active{transform:translateY(1px) scale(.98)}
+.site p a{transition:text-decoration-thickness .15s ease-out,text-underline-offset .15s ease-out}
+.site p a:hover{text-underline-offset:.3em}
+.top nav a{background:linear-gradient(currentColor,currentColor) no-repeat 0 85%/0% 1.5px;transition:background-size .25s var(--ease-out-quart)}
+.top nav a:hover{background-size:100% 1.5px}
+.top nav a[aria-current]{background-size:100% 2px}
+.style-btn .sw{transition:transform .25s var(--ease-out-expo)}
+.style-btn:hover .sw{transform:rotate(-8deg) scale(1.08)}
+.opt{transition:background-color .15s ease-out,border-color .15s ease-out}
+.opt .sw{transition:transform .2s var(--ease-out-expo)}
+.opt:hover .sw,.opt:has(input:focus-visible) .sw{transform:scale(1.08)}
+/* el punto de «disponible» late dos veces y se queda quieto */
+.avail .dot{position:relative}
+.avail .dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ok);animation:dot-ping 1.2s ease-out .6s 2 both}
+@keyframes dot-ping{from{opacity:.6;transform:none}to{opacity:0;transform:scale(2.8)}}
+
+/* --- selector: entra en 200 ms y sale en 150 (la salida, más rápida) --- */
+.picker{transition:opacity .2s var(--ease-out-quint),transform .2s var(--ease-out-quint),overlay .2s allow-discrete,display .2s allow-discrete}
+.picker:not(:popover-open){opacity:0;transform:translateY(-6px) scale(.98);transition-duration:.15s}
+@starting-style{.picker:popover-open{opacity:0;transform:translateY(-6px) scale(.98)}}
+.fact{margin-top:1.1rem;padding-top:.9rem;border-top:1px solid var(--line);font-size:.92rem;color:var(--muted);min-height:4.2em;transition:opacity .15s ease-out}
+.fact b{color:var(--fg)}
+.fact.swap{opacity:0}
+
+/* --- aviso al copiar el correo --- */
+.toast{position:fixed;left:50%;bottom:1.5rem;z-index:20;max-width:min(30rem,calc(100vw - 2rem));padding:.75rem 1.1rem;border:2px solid var(--fg);border-radius:var(--radius);background:var(--bg);color:var(--fg);font-weight:600;opacity:0;visibility:hidden;transform:translate(-50%,10px);transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s .15s}
+.toast.show{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .2s var(--ease-out-quint),transform .2s var(--ease-out-quint),visibility 0s}
+
+/* --- entrada del titular: una por estilo (también al cambiar de estilo) --- */
+@keyframes h-rise{from{opacity:0;transform:translateY(.25em)}}
+@keyframes h-wipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes h-spot{from{opacity:0;filter:blur(8px)}}
+@keyframes h-deco{from{opacity:0;letter-spacing:.3em}}
+@keyframes h-ink{from{text-shadow:.4em .3em 0 var(--accent)}}
+@keyframes h-hilite{from{background-size:0% 100%}}
+@keyframes h-dim{from{transform:scaleX(0)}}
+@keyframes h-fade{from{opacity:0}}
+@keyframes shape-roll{from{transform:translateX(-160%) rotate(-200deg)}}
+@keyframes shape-rise{from{transform:translateY(105%)}}
+@keyframes win-open{from{transform:scale(.8);opacity:.3}}
+.site[data-style=classic] .hero h1{animation:h-rise .7s var(--ease-out-quart) backwards}
+.site[data-style=swiss] .hero h1{animation:h-wipe .6s var(--ease-out-expo) backwards}
+.site[data-style=noir] .hero h1{animation:h-spot .8s var(--ease-out-quart) backwards}
+.site[data-style=deco] .hero h1{animation:h-deco .8s var(--ease-out-quint) backwards}
+.site[data-style=brutal] h1 em{background:linear-gradient(#FFE500,#FFE500) no-repeat 0 0/100% 100%;animation:h-hilite .3s steps(3,end) .15s backwards}
+.site[data-style=bauhaus] .hero::before{animation:shape-roll .9s var(--ease-out-expo) backwards}
+.site[data-style=bauhaus] .hero::after{animation:shape-rise .6s var(--ease-out-expo) .2s backwards}
+.site[data-style=riso] .hero h1{animation:h-ink .5s steps(3,end) backwards}
+.site[data-style=terminal] .hero h1{animation:h-wipe 1s steps(22,end) backwards}
+.site[data-style=blueprint] .hero h1{animation:h-fade .5s ease-out backwards}
+.site[data-style=blueprint] .hero h1::after{transform-origin:center;animation:h-dim .7s var(--ease-out-quart) .25s backwards}
+.site[data-style=retro] .hero,.site[data-style=retro] .now{transform-origin:0 0;animation:win-open .24s steps(4,end) backwards}
+.site[data-style=retro] .now{animation-delay:.12s}
+
+/* --- la animación característica: cada estilo entra a su manera ---
+   La pone el JS en <html data-vt="estilo"> durante la View Transition. */
+@keyframes vt-fade-out{to{opacity:0}}
+@keyframes vt-fade-in{from{opacity:0}}
+@keyframes vt-rise{from{opacity:0;transform:translateY(16px)}}
+@keyframes vt-slide-in{from{opacity:0;transform:translateX(6%)}}
+@keyframes vt-slide-out{to{opacity:0;transform:translateX(-6%)}}
+@keyframes vt-circle{from{clip-path:circle(0% at 82% 24%)}to{clip-path:circle(150% at 82% 24%)}}
+@keyframes vt-center{from{clip-path:inset(0 50% 0 50%)}to{clip-path:inset(0 0 0 0)}}
+@keyframes vt-wipe-x{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes vt-wipe-y{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes vt-window{from{opacity:0;transform:scale(.6)}}
+@keyframes vt-ink{0%{opacity:.5;transform:translate(12px,7px)}60%{opacity:.85;transform:translate(-4px,2px)}100%{opacity:1;transform:none}}
+html[data-vt=classic]::view-transition-old(root){animation:vt-fade-out .25s var(--ease-out-quart,ease-out) both}
+html[data-vt=classic]::view-transition-new(root){animation:vt-rise .5s cubic-bezier(.25,1,.5,1) both}
+html[data-vt=swiss]::view-transition-old(root){animation:vt-slide-out .35s cubic-bezier(.16,1,.3,1) both}
+html[data-vt=swiss]::view-transition-new(root){animation:vt-slide-in .45s cubic-bezier(.16,1,.3,1) both}
+html[data-vt=noir]::view-transition{background:#000}
+html[data-vt=noir]::view-transition-old(root){animation:vt-fade-out .25s ease-in both}
+html[data-vt=noir]::view-transition-new(root){animation:vt-fade-in .45s ease-out .2s both}
+html[data-vt=deco]::view-transition-old(root){animation:none}
+html[data-vt=deco]::view-transition-new(root){animation:vt-center .7s cubic-bezier(.22,1,.36,1) both}
+html[data-vt=brutal]::view-transition-old(root),html[data-vt=brutal]::view-transition-new(root){animation:none}
+html[data-vt=bauhaus]::view-transition-old(root){animation:none}
+html[data-vt=bauhaus]::view-transition-new(root){animation:vt-circle .7s cubic-bezier(.16,1,.3,1) both}
+html[data-vt=riso]::view-transition-old(root){animation:vt-fade-out .2s ease-out both}
+html[data-vt=riso]::view-transition-new(root){animation:vt-ink .45s steps(3,end) both}
+html[data-vt=terminal]::view-transition-old(root){animation:none}
+html[data-vt=terminal]::view-transition-new(root){animation:vt-wipe-y .5s steps(10,end) both}
+html[data-vt=blueprint]::view-transition-old(root){animation:none}
+html[data-vt=blueprint]::view-transition-new(root){animation:vt-wipe-x .7s cubic-bezier(.65,0,.35,1) both}
+html[data-vt=retro]::view-transition-old(root){animation:none}
+html[data-vt=retro]::view-transition-new(root){transform-origin:4% 6%;animation:vt-window .28s steps(4,end) both}
+
+@media (max-width:760px){
+  .picker:not(:popover-open){transform:translateY(100%)}
+  @starting-style{.picker:popover-open{transform:translateY(100%)}}
+}
+
+/* ===== móvil: una columna, mismas tres zonas, objetivos de 44 px ===== */
+@media (max-width:760px){
+  .site main,.site main>section,.site .hero,.site .inner,.site .cases ul,.site .case{display:block!important}
+  .site .case+.case{margin-top:var(--gap)}
+  .site .case-body{margin-top:1rem}
+  .site .timeline li{grid-template-columns:5rem 1fr!important}
+  .site .timeline .role{grid-column:2;text-align:left!important}
+  .top nav a,.prefs a,.style-btn{min-height:44px}
+  .picker{top:auto;bottom:0;left:0;right:0;width:100%;max-height:85vh}
+  .site[data-style=brutal] main>section{margin-top:1rem}
+  .site[data-style=retro] main>section{margin-top:1.5rem!important}
+  .site[data-style=bauhaus] .hero{min-height:0;padding-right:0}
+  .site[data-style=bauhaus] .hero::before,.site[data-style=bauhaus] .hero::after{display:none}
+}
+
+/* ===== movimiento: un solo cambio de 250 ms; sin movimiento si el sistema lo pide ===== */
+::view-transition-group(root){animation-duration:.25s;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+  .site *,.site *::before,.site *::after{transition:none!important;animation:none!important}
+}
+
+/* ===== impresión: neutra, sea cual sea el estilo ===== */
+@media print{
+  .prefs,.skip,.top nav,.picker,.shot{display:none!important}
+  .site{padding:0;background:#fff!important;color:#000!important;font:11pt/1.45 Georgia,serif!important}
+  .site *{color:#000!important;background:none!important;text-shadow:none!important;border-color:#000!important;transform:none!important}
+  .site *::before,.site *::after{content:none!important}
+}
+</style>
+</head>
+<body>
+
+
+<div class="site" id="site">
+<script>/* sin parpadeo: decide el estilo antes de pintar (URL > guardado > sistema) */
+(function(s){var k=['classic','swiss','noir','deco','brutal','bauhaus','riso','terminal','blueprint','retro'],q=new URLSearchParams(location.search).get('style'),v=null;try{v=localStorage.getItem('pf-style')}catch(e){}var c=k.indexOf(q)>-1?q:k.indexOf(v)>-1?v:'auto';s.dataset.choice=c;s.dataset.style=c!=='auto'?c:(matchMedia('(prefers-color-scheme: dark)').matches?'noir':'classic')})(document.currentScript.parentNode);
+</script>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="inner">
+    <header class="top">
+      <a class="name" href="/" aria-current="page">Eduardo González</a>
+      <nav aria-label="Main"><ul>
+        <li><a href="#work">Work</a></li>
+      </ul></nav>
+      <div class="prefs">
+        <button type="button" class="style-btn" popovertarget="style-picker"><span class="sw" aria-hidden="true">Aa</span>Style<span class="vh">:</span> <span id="style-current" class="vh"></span></button>
+      </div>
+    </header>
+
+    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+      <h2 id="picker-h">Choose a style</h2>
+      <p class="picker-note">Same content in ten visual styles. Every one passes WCAG 2.2 AA.</p>
+      <fieldset>
+        <legend class="vh">Default</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="auto"><span class="sw sw-auto" aria-hidden="true"></span><span><b>Match my system</b><small>Light: New classic. Dark: Noir.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Quiet</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="classic"><span class="sw" data-style="classic" aria-hidden="true">Aa</span><span><b>New classic</b><small>A university-press book.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="swiss"><span class="sw" data-style="swiss" aria-hidden="true">Aa</span><span><b>Swiss</b><small>A 12-column poster grid.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="noir"><span class="sw" data-style="noir" aria-hidden="true">Aa</span><span><b>Noir</b><small>Dark, with one amber accent.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="deco"><span class="sw" data-style="deco" aria-hidden="true">Aa</span><span><b>Art Deco</b><small>Symmetry and gold.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Bold</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="brutal"><span class="sw" data-style="brutal" aria-hidden="true">Aa</span><span><b>Brutalism</b><small>Raw HTML, system fonts.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="bauhaus"><span class="sw" data-style="bauhaus" aria-hidden="true">Aa</span><span><b>Bauhaus</b><small>Primary colors and shapes.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="riso"><span class="sw" data-style="riso" aria-hidden="true">Aa</span><span><b>Risograph</b><small>A two-ink zine.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Interface</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="terminal"><span class="sw" data-style="terminal" aria-hidden="true">Aa</span><span><b>Terminal</b><small>A VT100 manual.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="blueprint"><span class="sw" data-style="blueprint" aria-hidden="true">Aa</span><span><b>Blueprint</b><small>An architect's drawing.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="retro"><span class="sw" data-style="retro" aria-hidden="true">Aa</span><span><b>Retro OS</b><small>A 90s desktop.</small></span></label>
+        </div>
+      </fieldset>
+      <p class="fact" id="style-fact"><b>Did you know?</b> <span></span></p>
+    </div>
+    <noscript><style>.style-btn{display:none!important}</style></noscript>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="h-hero">
+        <p class="kicker">Senior Frontend Engineer · Accessibility</p>
+        <h1 id="h-hero">I build interfaces <em>everyone</em> can use.</h1>
+        <p class="lede">Eight years of frontend: WCAG AAA at Drift, and today leading SITIMM's web, app and admin panel with teams of AI agents.</p>
+        <p class="avail"><span class="dot" aria-hidden="true"></span>Open to senior frontend and full-stack roles · Remote, UTC−6</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="mailto:eduardo@kerbero94.dev">Email me</a>
+          <button type="button" class="btn btn-link" data-copy="eduardo@kerbero94.dev">Copy email</button>
+          <a class="btn btn-link" href="https://www.linkedin.com/in/eduglezzvl94">LinkedIn</a>
+          <a class="btn btn-link" href="https://github.com/kerbero1994">GitHub</a>
+        </div>
+      </section>
+
+      <section class="now" aria-labelledby="h-now">
+        <h2 id="h-now">Now</h2>
+        <p>Leading <a href="#work">SITIMM's platform</a>, the web, app and admin panel for a union of 70,000 members, with teams of AI agents: 5 repos and 8,790 commits since May 2025.</p>
+      </section>
+
+      <section class="cases" id="work" aria-labelledby="h-cases">
+        <h2 id="h-cases">Selected work</h2>
+        <ul>
+          <li class="case case-lead">
+            <figure class="shot"><img src="/img/shot-sitimm-web.jpg" width="1568" height="782" alt="SITIMM's public website: a red header with nine sections, the union's name and a news carousel."></figure>
+            <div class="case-body">
+              <h3><a href="/sitimm/">SITIMM: web, app and admin panel</a></h3>
+              <p>A union's public platform for 70,000 members, rebuilt and run by AI agent teams I direct: the website, an app on both stores and the panel behind them.</p>
+              <p class="meta">Lead engineer · 2025–now · Next.js, React Native, FastAPI</p>
+            </div>
+          </li>
+          <li class="case">
+            <figure class="shot"><img src="/img/shot-a11y-skip-detail.jpg" width="784" height="392" alt="The top left corner of sitimm.org after one press of the Tab key: an outlined “Skip to main content” link above the logo."></figure>
+            <div class="case-body">
+              <h3><a href="/accessibility/">Making accessibility hard to break</a></h3>
+              <p>Nine failures on sitimm.org, the WCAG criterion behind each one, the fix, and the checks that keep it fixed when AI agents write the code.</p>
+              <p class="meta">Accessibility · 2026 · WCAG 2.2 AA, axe, Playwright</p>
+            </div>
+          </li>
+          <li class="case">
+            <figure class="shot"><img src="/img/app-sitimmvito.jpg" width="1920" height="1080" alt="SitimmVito, the app's AI assistant, answering a question about member discounts."></figure>
+            <div class="case-body">
+              <h3><a href="/sitimmvito/">Teaching an assistant to find the right answer</a></h3>
+              <p>An outage on a Saturday, and by Sunday the app's assistant searched everything the union publishes, inside the Postgres it already had.</p>
+              <p class="meta">Backend · October 2026 · PostgreSQL, pgvector, FastAPI</p>
+            </div>
+          </li>
+          <li class="case">
+            <div class="case-body">
+              <h3>Accessibility at Drift</h3>
+              <p>Frontend held to WCAG AAA across the platform, and the go-to engineer for high-priority bugs.</p>
+              <p class="meta">Senior Frontend Developer · 2022–25 · React, TypeScript</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="lessons" id="lessons" aria-labelledby="h-lessons">
+        <h2 id="h-lessons">What SITIMM taught me</h2>
+        <p class="lessons-lede">A year as the only engineer on a platform for 70,000 union members. These changed how I build.</p>
+        <ul class="lesson-list">
+          <li>
+            <h3>Meet people where they already publish.</h3>
+            <p>The comms team already posted every notice to a WhatsApp channel, so the CMS was a second, manual job. Now a bot reads the channel, AI drafts the post in 8 languages, and an admin approves it from email or WhatsApp.</p>
+          </li>
+          <li>
+            <h3>Nobody wants a ticket. They want an answer.</h3>
+            <p>Members didn't get how a ticket queue works; they wanted results right away. Consultations became a conversation, and SitimmVito, the app's assistant, answers from the union's own documents in seconds.</p>
+          </li>
+          <li>
+            <h3>Approving should take one click.</h3>
+            <p>A new magazine used to wait for approval before its page and promo video were even made. Now everything is built the moment the issue is detected; approving only makes it official.</p>
+          </li>
+          <li>
+            <h3>Show people it saved.</h3>
+            <p>Autosave felt modern to me. The admins, who aren't technical, didn't trust it. A clear “Save changes” button, visible states and a success message fixed that.</p>
+          </li>
+          <li>
+            <h3>“Sent” is not “delivered”.</h3>
+            <p>The server counted every notification as sent. When I measured, almost no phones were subscribed. Now each notice shows how many people could get it, received it and opened it.</p>
+          </li>
+          <li>
+            <h3>Unused isn't unneeded.</h3>
+            <p>I proposed removing features with zero usage. The client stopped me: the panel was new, so zero measured adoption, not need. Broken things get fixed, not deleted.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="work" aria-labelledby="h-work">
+        <h2 id="h-work">Experience</h2>
+        <ol class="timeline">
+          <li><span class="yr">2025–</span><span class="co">SITIMM</span><span class="role">Lead engineer, AI agent teams</span></li>
+          <li><span class="yr">2022–25</span><span class="co">Drift</span><span class="role">Senior Frontend Developer</span></li>
+          <li><span class="yr">2019–22</span><span class="co">SITIMM</span><span class="role">Frontend Developer</span></li>
+          <li><span class="yr">2018–19</span><span class="co">Remote</span><span class="role">Frontend Developer</span></li>
+          <li><span class="yr">2017</span><span class="co">MagmaLabs</span><span class="role">Junior Frontend Developer</span></li>
+        </ol>
+      </section>
+
+      <section class="contact" aria-labelledby="h-contact">
+        <h2 id="h-contact">Let's talk</h2>
+        <p>I'm looking for a senior frontend or full-stack role where accessibility matters. Email is the fastest way to reach me.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="mailto:eduardo@kerbero94.dev">Email me</a>
+          <button type="button" class="btn btn-link" data-copy="eduardo@kerbero94.dev">Copy email</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <a href="https://www.linkedin.com/in/eduglezzvl94">LinkedIn</a><a href="https://github.com/kerbero1994">GitHub</a><span>© 2026 Eduardo González</span>
+    </footer>
+  </div>
+  <div class="toast" role="status" aria-live="polite"></div>
+  <p class="vh" id="style-status" aria-live="polite"></p>
+</div>
+
+<script>
+(function(){
+  const NAMES={classic:'New classic',swiss:'Swiss',noir:'Noir',deco:'Art Deco',brutal:'Brutalism',bauhaus:'Bauhaus',riso:'Risograph',terminal:'Terminal',blueprint:'Blueprint',retro:'Retro OS'};
+  const site=document.getElementById('site');
+  const dark=matchMedia('(prefers-color-scheme: dark)');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+  const sysStyle=()=>dark.matches?'noir':'classic';
+  const meta=document.getElementById('theme-color');
+
+  function paint(style,choice){
+    site.dataset.style=style;site.dataset.choice=choice;
+    document.getElementById('style-current').textContent=NAMES[style];
+    site.querySelectorAll('input[name=style]').forEach(r=>{r.checked=r.value===choice});
+    meta.content=document.documentElement.style.background=getComputedStyle(site).getPropertyValue('--bg').trim();
+  }
+  function choose(choice){
+    const style=choice==='auto'?sysStyle():choice;
+    try{choice==='auto'?localStorage.removeItem('pf-style'):localStorage.setItem('pf-style',choice)}catch(e){}
+    const u=new URL(location.href);
+    choice==='auto'?u.searchParams.delete('style'):u.searchParams.set('style',choice);
+    history.replaceState(null,'',u);
+    const run=()=>paint(style,choice);
+    if(document.startViewTransition&&!reduce.matches){
+      const h=document.documentElement;h.dataset.vt=style;
+      document.startViewTransition(run).finished.finally(()=>{delete h.dataset.vt});
+    }else run();
+    showFact(choice==='auto'?'auto':style);
+    document.getElementById('style-status').textContent='Style: '+NAMES[style]+(choice==='auto'?' (matches your system)':'');
+  }
+  paint(site.dataset.style,site.dataset.choice);
+  site.querySelectorAll('input[name=style]').forEach(r=>r.addEventListener('change',()=>choose(r.value)));
+  dark.addEventListener('change',()=>{if(site.dataset.choice==='auto')paint(sysStyle(),'auto')});
+
+  const FACTS={
+    auto:'Your device picked this one. I respect that.',
+    classic:'Bodoni cut his typefaces in Parma in the 1790s, every letter by hand, in steel. No undo button.',
+    swiss:'Helvetica launched in 1957 as Neue Haas Grotesk. It was renamed in 1960 so it would sell abroad.',
+    noir:'A French critic, Nino Frank, named "film noir" in 1946. Hollywood had no idea it was making it.',
+    deco:'Art Deco is named after the 1925 Paris exposition of decorative arts. The name only caught on in the 1960s.',
+    brutal:'Brutalism comes from béton brut, French for raw concrete. Nothing to do with being brutal. Mostly.',
+    bauhaus:'The Bauhaus opened in Weimar in 1919 and was shut down in 1933. Fourteen years, and we are still copying it.',
+    riso:'Riso Kagaku launched the Risograph in Japan in 1980. The ink never quite lines up, and that is the charm.',
+    terminal:'DEC shipped the VT100 in 1978. Your terminal still speaks its escape codes.',
+    blueprint:'Blueprints come from the cyanotype, invented by John Herschel in 1842. White lines on blue for a century.',
+    retro:'Windows 95 launched in August 1995 with a Rolling Stones song in the ad: "Start Me Up".'
+  };
+  const fact=site.querySelector('#style-fact span');
+  function showFact(k){
+    if(!fact||!FACTS[k]||fact.dataset.k===k)return;
+    const p=fact.parentNode;p.classList.add('swap');
+    setTimeout(()=>{fact.textContent=FACTS[k];fact.dataset.k=k;p.classList.remove('swap')},reduce.matches?0:150);
+  }
+  showFact(site.dataset.choice==='auto'?'auto':site.dataset.style);
+  site.querySelectorAll('.opt').forEach(o=>{
+    const k=o.querySelector('input').value;
+    o.addEventListener('pointerenter',()=>showFact(k));
+    o.addEventListener('focusin',()=>showFact(k));
+  });
+
+  const toast=site.querySelector('.toast');let tt;
+  site.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(b.dataset.copy);toast.textContent='Email copied.'}
+    catch(e){toast.textContent='Could not copy. It is '+b.dataset.copy}
+    toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),2800);
+  }));
+
+  console.log('%cHey, you opened the console. I like you already.','font:600 14px system-ui');
+  console.log('I\'m Eduardo, kerbero on the internet: like Kerberos, the protocol, and Cerberus, the dog at the gate.');
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Eduardo González Zavala: Résumé</title>
+<style>
+@page{size:Letter;margin:13mm 15mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:9.6pt/1.4 "Helvetica Neue",Arial,sans-serif;color:#1a1a1a}
+a{color:inherit;text-decoration:none}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;padding-bottom:7pt;border-bottom:1.2pt solid #1a1a1a}
+h1{font:600 19pt/1.1 Georgia,"Times New Roman",serif;letter-spacing:-.01em}
+.role{margin-top:2pt;font-size:10.5pt}
+.contact{text-align:right;font-size:8.8pt;line-height:1.45}
+h2{margin:10pt 0 4pt;font-size:8.6pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7a1f2b}
+.summary{font-size:9.8pt}
+.job{margin-top:6pt;break-inside:avoid}
+.job-h{display:flex;justify-content:space-between;gap:1rem}
+.job-h b{font-size:10pt}
+.when{white-space:nowrap;color:#444}
+ul{margin:2pt 0 0 12pt}
+li{margin-top:1.5pt}
+.skills p{margin-top:2pt}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 1.5rem}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Eduardo González Zavala</h1>
+    <p class="role">Senior Frontend Engineer · Accessibility · Open to full-stack</p>
+  </div>
+  <p class="contact">
+    <a href="mailto:eduardo@kerbero94.dev">eduardo@kerbero94.dev</a> · <a href="https://kerbero94.dev">kerbero94.dev</a><br>
+    <a href="https://www.linkedin.com/in/eduglezzvl94">linkedin.com/in/eduglezzvl94</a> · <a href="https://github.com/kerbero1994">github.com/kerbero1994</a><br>
+    Mexico · Remote, UTC−6
+  </p>
+</header>
+
+<h2>Summary</h2>
+<p class="summary">Frontend engineer with eight years of building accessible web and mobile apps. At Drift I held the frontend to WCAG AAA and was the go-to engineer for critical bugs. Today I am the only engineer on SITIMM's platform, a union's website, app and admin panel for 70,000 members, and I direct teams of AI agents to build and run it.</p>
+
+<h2>Experience</h2>
+
+<div class="job">
+  <div class="job-h"><span><b>Lead Engineer, AI agent teams</b> · SITIMM</span><span class="when">2025 – present</span></div>
+  <ul>
+    <li>Sole engineer on the union's public platform: a Next.js website in 8 languages, a React Native app on both stores, and the admin panel, on a FastAPI and PostgreSQL backend.</li>
+    <li>Direct teams of AI agents across 5 repositories: 8,790 commits since May 2025, with local quality gates (types, lint, tests, accessibility) before every push.</li>
+    <li>Made accessibility hard to break: 30 lint rules on every push, typed components that cannot ship a dialog without a name, and keyboard tests for every picker.</li>
+    <li>After an outage, rebuilt the app assistant's search over everything the union publishes inside the existing Postgres (pgvector), over one weekend.</li>
+    <li>Automated publishing: a bot reads the comms team's WhatsApp channel, AI drafts the post in 8 languages, and an admin approves it from email or WhatsApp.</li>
+  </ul>
+</div>
+
+<div class="job">
+  <div class="job-h"><span><b>Senior Frontend Developer</b> · Drift (Salesloft) · Remote</span><span class="when">Jul 2022 – Jun 2025</span></div>
+  <ul>
+    <li>Main point of contact for critical and high-priority frontend bugs.</li>
+    <li>Held frontend implementations to WCAG AAA across the platform.</li>
+    <li>Leading role in migrating the chatbot to a new architecture, improving performance and maintainability.</li>
+    <li>Moved from React and Redux to Next.js and Jotai on a Turborepo and T3 Stack platform (TypeScript, Tailwind, tRPC); took backend tasks as needed.</li>
+  </ul>
+</div>
+
+<div class="job">
+  <div class="job-h"><span><b>Frontend Developer</b> · SITIMM</span><span class="when">Oct 2019 – May 2022</span></div>
+  <ul>
+    <li>Built web and mobile apps from scratch with stakeholders, from requirements to deployment: React Native apps with sign-in, push notifications and offline support.</li>
+    <li>A custom CMS with role-based access, an event sign-up system with reminders, a secure election system with real-time vote tracking, and a file-sharing tool with access control.</li>
+  </ul>
+</div>
+
+<div class="job">
+  <div class="job-h"><span><b>Frontend Developer</b> · Startups · Remote</span><span class="when">Apr 2018 – Oct 2019</span></div>
+  <ul>
+    <li>React and Gatsby sites with SSR and SSG, GraphQL data layers, and performance and SEO tuning.</li>
+  </ul>
+</div>
+
+<div class="job">
+  <div class="job-h"><span><b>Software Developer</b> · Net Arquitectura</span><span class="when">Aug 2017 – May 2018</span></div>
+  <ul>
+    <li>Accounting modules in Visual Basic; responsive web interfaces in HTML, CSS and JavaScript.</li>
+  </ul>
+</div>
+
+<div class="job">
+  <div class="job-h"><span><b>Junior Frontend Developer (internship)</b> · MagmaLabs</span><span class="when">Jan – Aug 2017</span></div>
+  <ul>
+    <li>Intensive Ruby on Rails program: test-driven development, Ruby Koans, Code in the Dark.</li>
+  </ul>
+</div>
+
+<div class="two">
+  <div class="skills">
+    <h2>Skills</h2>
+    <p><b>Frontend:</b> React, Next.js, React Native, TypeScript, JavaScript, HTML, CSS, Tailwind, Redux, Jotai, Gatsby</p>
+    <p><b>Accessibility:</b> WCAG 2.2 AA and AAA, axe, keyboard testing</p>
+    <p><b>Backend:</b> Node.js, FastAPI, PostgreSQL, GraphQL, Firebase, Docker</p>
+    <p><b>Testing:</b> Playwright, Jest, Vitest, TestCafe</p>
+  </div>
+  <div>
+    <h2>Education</h2>
+    <p>Bachelor's in Computer Systems Engineering<br>Instituto Tecnológico Superior de Irapuato (ITESI)</p>
+    <h2>Languages</h2>
+    <p>Spanish, native · English, professional</p>
+  </div>
+</div>
+</body>
+</html>

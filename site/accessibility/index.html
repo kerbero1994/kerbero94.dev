@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" id="theme-color" content="#FBF9F9">
+<title>Accessibility on sitimm.org: Eduardo González</title>
+<meta name="description" content="What failed on sitimm.org, the WCAG criterion behind each failure, how it was fixed, and the checks that keep it fixed when AI agents write the code.">
+<link rel="canonical" href="https://kerbero94.dev/accessibility/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Eduardo González">
+<meta property="og:title" content="Accessibility on sitimm.org: Eduardo González">
+<meta property="og:description" content="What failed on sitimm.org, the WCAG criterion behind each failure, how it was fixed, and the checks that keep it fixed when AI agents write the code.">
+<meta property="og:url" content="https://kerbero94.dev/accessibility/">
+<meta property="og:image" content="https://kerbero94.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Atkinson+Hyperlegible+Next:wght@400;700&family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Schibsted+Grotesk:wght@400;600;700&family=Gloock&family=Albert+Sans:wght@400;600&family=Aboreto&family=Josefin+Sans:wght@400;600&family=Jost:wght@400;500;700&family=Archivo+Black&family=Courier+Prime:wght@400;700&family=VT323&family=Architects+Daughter&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+
+/* ===== base compartida: el contrato de coherencia ===== */
+.site{
+  --bg:#fff;--fg:#111;--muted:#555;--accent:#00e;--accent-ink:#fff;--line:#0003;--ok:#1F9D55;
+  --font-body:system-ui,sans-serif;--font-display:var(--font-body);
+  --radius:0;--gap:clamp(1.25rem,3vw,2rem);--section:clamp(3rem,8vw,6rem);
+  position:relative;isolation:isolate;overflow:hidden;min-height:100vh;
+  padding:clamp(1.25rem,4vw,3.5rem);background:var(--bg);color:var(--fg);
+  font:400 1.0625rem/1.6 var(--font-body)}
+.site *{margin:0}
+.site ul,.site ol{list-style:none;padding:0}
+.site img{display:block;max-width:100%;height:auto}
+.site h1,.site h2,.site h3{font-family:var(--font-display);text-wrap:balance}
+.site h2{font-size:1.75rem;line-height:1.15}
+.site h3{font-size:1.35rem;line-height:1.25}
+.site p{text-wrap:pretty}
+.site .lede,.site .now p,.site .contact p,.site .case-body p{max-width:65ch}
+/* enlaces: subrayados dentro de un texto en los 10 estilos */
+.site a{color:inherit}
+.site p a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}
+.site p a:hover{text-decoration-thickness:2px}
+.site :focus-visible{outline:3px solid var(--focus,var(--accent));outline-offset:3px}
+.skip{position:absolute;top:-6rem;left:1rem;z-index:3;padding:.6rem 1rem;background:var(--fg);color:var(--bg)!important}
+.skip:focus{top:1rem}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* encabezado: tres zonas fijas en todos los estilos (nombre · navegación · preferencias) */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 2rem}
+.top .name{margin-right:auto;text-decoration:none}
+.top nav ul{display:flex;gap:.25rem 1.25rem}
+.top nav a{display:inline-flex;align-items:center;min-height:40px;text-decoration:none}
+.top nav a:hover,.top nav a[aria-current]{text-decoration:underline;text-underline-offset:.3em}
+.top nav a[aria-current]{text-decoration-thickness:2px}
+.prefs{display:flex;align-items:center;gap:.5rem}
+.prefs a,.style-btn{display:inline-flex;align-items:center;gap:.5rem;min-height:40px;padding:0 .75rem;border:1px solid currentColor;border-radius:var(--radius);background:transparent;color:inherit;font:inherit;font-size:.95rem;text-decoration:none;cursor:pointer}
+.prefs a:hover,.style-btn:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.sw{display:inline-grid;place-items:center;flex:none;width:1.6rem;height:1.6rem;border:1px solid var(--fg);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:400 .8rem/1 var(--font-display);position:relative}
+.sw::after{content:"";position:absolute;right:-3px;bottom:-3px;width:.6rem;height:.6rem;border-radius:50%;background:var(--accent);outline:1px solid var(--bg)}
+
+/* selector de estilos: popover nativo con vista previa */
+.picker{inset:auto;top:5rem;right:1rem;width:min(34rem,calc(100vw - 2rem));max-height:calc(100vh - 6rem);overflow:auto;margin:0;padding:1.25rem;border:2px solid var(--fg);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:400 1rem/1.5 var(--font-body)}
+.picker h2{font-size:1.35rem}
+.picker-note{margin-top:.25rem;color:var(--muted)}
+.picker fieldset{margin:1rem 0 0;padding:0;border:0}
+.picker legend{padding:0;margin-bottom:.4rem;font-weight:700}
+.picker .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.4rem}
+.opt{position:relative;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.75rem;min-height:48px;padding:.45rem .6rem;border:1px solid transparent;border-radius:var(--radius);cursor:pointer}
+.opt:hover{background:color-mix(in srgb,var(--fg) 7%,transparent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt:has(input:checked){border-color:var(--fg)}
+.opt:has(input:focus-visible){outline:3px solid var(--focus,var(--accent));outline-offset:2px}
+.opt b{display:block;font-weight:700}
+.opt small{display:block;font-size:.85rem;color:var(--muted)}
+.opt:has(input:checked) b::after{content:" ✓" / ""}
+.opt .sw{width:2.6rem;height:2.6rem;font-size:1.15rem}
+.sw-auto{background:linear-gradient(135deg,#FBF9F9 50%,#0C0C0D 50%)!important;color:transparent!important}
+
+/* hero: quién, qué, disponible y cómo contactarlo, arriba del pliegue */
+.kicker{font-size:1rem;font-weight:600}
+.avail{display:flex;align-items:center;gap:.6rem;margin-top:1.25rem}
+.avail .dot{width:.65rem;height:.65rem;border-radius:50%;background:var(--ok);flex:none}
+.cta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem}
+.btn{display:inline-flex;align-items:center;gap:.5em;min-height:44px;padding:.55rem 1.1rem;border:2px solid currentColor;border-radius:var(--radius);color:inherit;font-weight:600;text-decoration:none;transition:background-color .15s ease-out,color .15s ease-out,transform .15s ease-out}
+.btn:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.btn:active{transform:translateY(1px)}
+/* .site a{color:inherit} outranks a lone class: anchor the button to .site */
+.site .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:color-mix(in srgb,var(--accent) 85%,var(--fg))}
+.btn-link{padding-inline:.4rem;border-color:transparent;text-decoration:underline;text-underline-offset:.2em}
+.btn .meta{font-weight:400;font-size:.85em;opacity:.85}
+
+.site main>section{margin-top:var(--section)}
+.site main>.hero{margin-top:clamp(2.5rem,7vw,5rem)}
+
+/* casos: filas grandes, el primero más grande; toda la fila es el enlace */
+.cases ul{display:grid;gap:clamp(2rem,5vw,3.5rem);margin-top:1.25rem}
+.case{position:relative;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:var(--gap)}
+.case-lead{grid-template-columns:3fr 2fr;align-items:end}
+.case:nth-child(2) .shot{order:2}
+.case:not(:has(.shot)){grid-template-columns:1fr}
+.shot img{width:100%;aspect-ratio:16/8;object-fit:cover;object-position:top}
+.case h3 a{text-decoration:none}
+.case h3 a::after{content:" →" / "";display:inline-block;transition:transform .2s cubic-bezier(.16,1,.3,1)}
+.case h3 a::before{content:"";position:absolute;inset:0;z-index:1}
+.case:hover h3 a{text-decoration:underline;text-underline-offset:.2em}
+.case:hover h3 a::after{transform:translateX(4px)}
+.case-body{display:grid;gap:.6rem}
+.case .meta{font-size:.9rem;color:var(--muted)}
+
+.timeline{margin-top:1rem}
+.timeline li{display:grid;grid-template-columns:6rem 1fr 1.3fr;column-gap:1rem;padding:.8rem 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.timeline .yr,.timeline .role{color:var(--muted)}
+.timeline .co{font-weight:600}
+.contact .cta{margin-top:1.25rem}
+.foot{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:var(--section);padding-top:1.25rem;border-top:1px solid var(--line);font-size:.95rem;color:var(--muted)}
+.foot a{text-decoration:underline;text-underline-offset:.2em}
+
+/* ===== tokens por estilo (también los usa la miniatura del selector) ===== */
+[data-style=classic]{--bg:#FBF9F9;--fg:#1C1718;--muted:#5A5254;--accent:#8A2432;--accent-ink:#fff;--line:#1C171826;--font-display:"Bodoni Moda",serif;--font-body:"Atkinson Hyperlegible Next",sans-serif}
+[data-style=swiss]{--bg:#FFFFFF;--fg:#111111;--muted:#4D4D4D;--accent:#D0021B;--accent-ink:#fff;--line:#111;--font-display:"Schibsted Grotesk",sans-serif;--font-body:"Schibsted Grotesk",sans-serif}
+[data-style=noir]{--bg:#0C0C0D;--fg:#ECE8E1;--muted:#B3AEA6;--accent:#F0A63A;--accent-ink:#0C0C0D;--line:#2E2C29;--font-display:Gloock,serif;--font-body:"Albert Sans",sans-serif}
+[data-style=deco]{--bg:#0F1F1C;--fg:#EFE6D2;--muted:#CFC2A3;--accent:#D9B46A;--accent-ink:#0F1F1C;--line:#D9B46A59;--font-display:Aboreto,serif;--font-body:"Josefin Sans",sans-serif}
+[data-style=brutal]{--bg:#E8E8E3;--fg:#000;--muted:#000;--accent:#0000EE;--accent-ink:#fff;--line:#000;--focus:#000;--font-display:Arial,"Helvetica Neue",Helvetica,sans-serif;--font-body:"Times New Roman",Times,serif}
+[data-style=bauhaus]{--bg:#F2F3F5;--fg:#141414;--muted:#3A3A3A;--accent:#C8281E;--accent-ink:#fff;--blue:#1E4FA3;--yellow:#F2B705;--line:#141414;--font-display:Jost,sans-serif;--font-body:Jost,sans-serif}
+[data-style=riso]{--bg:#F7F6F6;--fg:#22306A;--muted:#33427E;--accent:#FF48B0;--accent-ink:#22306A;--tint:#FFC2E0;--line:#22306A;--font-display:"Archivo Black",sans-serif;--font-body:"Courier Prime",monospace}
+[data-style=terminal]{--bg:#0B0F0B;--fg:#A9F5A0;--muted:#7FCF77;--accent:#FFB000;--accent-ink:#0B0F0B;--line:#2A3F2A;--font-display:VT323,monospace;--font-body:"Atkinson Hyperlegible Mono",monospace}
+[data-style=blueprint]{--bg:#123F7C;--fg:#F4F7FF;--muted:#C9D8F2;--accent:#FFD866;--accent-ink:#123F7C;--line:#F4F7FF80;--font-display:"Architects Daughter",cursive;--font-body:"Martian Mono",monospace}
+[data-style=retro]{--bg:#007373;--fg:#000;--muted:#1A1A1A;--accent:#000080;--accent-ink:#fff;--line:#808080;--focus:#000;--font-display:Verdana,Tahoma,sans-serif;--font-body:Verdana,Tahoma,sans-serif}
+
+/* ===== 1. New classic: libro de imprenta universitaria, no revista ===== */
+.site[data-style=classic]{font-size:1.125rem;line-height:1.65}
+.site[data-style=classic] .inner{max-width:46rem;margin-inline:auto}
+.site[data-style=classic] .name{font:600 1.35rem/1 var(--font-display)}
+.site[data-style=classic] .kicker{color:var(--muted);font-weight:700}
+.site[data-style=classic] h1{margin-top:.75rem;font-size:clamp(2.75rem,6.5vw,4.75rem);font-weight:500;line-height:1.02;letter-spacing:-.01em;font-variation-settings:"opsz" 96}
+.site[data-style=classic] h1 em{font-style:italic;color:var(--accent)}
+.site[data-style=classic] .lede{margin-top:1.25rem;font-size:1.25rem;color:var(--muted)}
+.site[data-style=classic] h2{font-size:2rem;font-weight:600}
+.site[data-style=classic] h3{font-size:1.5rem;font-weight:600}
+.site[data-style=classic] .case{grid-template-columns:1fr}
+.site[data-style=classic] .case .shot{order:0}
+.site[data-style=classic] .timeline li{grid-template-columns:5.5rem 1fr}
+.site[data-style=classic] .timeline .yr{grid-row:span 2}
+.site[data-style=classic] .timeline .co{font:600 1.2rem/1.3 var(--font-display)}
+
+/* ===== 2. Suizo: póster de Müller-Brockmann, rejilla de 12 ===== */
+.site[data-style=swiss] .inner{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:1.25rem}
+.site[data-style=swiss] .top,.site[data-style=swiss] main,.site[data-style=swiss] .foot{grid-column:1/-1}
+.site[data-style=swiss] main,.site[data-style=swiss] .hero{display:grid;grid-template-columns:subgrid}
+.site[data-style=swiss] .top{padding-top:.6rem;border-top:2px solid var(--fg);font-weight:600}
+.site[data-style=swiss] .name{font-weight:700}
+.site[data-style=swiss] .hero,.site[data-style=swiss] .cases,.site[data-style=swiss] .work{grid-column:1/-1}
+.site[data-style=swiss] .hero>*{grid-column:5/-1}
+.site[data-style=swiss] .hero>.kicker,.site[data-style=swiss] .hero>h1{grid-column:1/-1}
+.site[data-style=swiss] h1{margin:.75rem 0 1.5rem;font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:.95;letter-spacing:-.04em}
+.site[data-style=swiss] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=swiss] .lede{font-size:1.25rem;line-height:1.4}
+.site[data-style=swiss] .now,.site[data-style=swiss] .contact{grid-column:5/-1}
+.site[data-style=swiss] h2{padding-top:.5rem;border-top:2px solid var(--fg);font-weight:700;letter-spacing:-.01em}
+.site[data-style=swiss] h3{font-weight:700;letter-spacing:-.02em}
+.site[data-style=swiss] .timeline li{border-top-color:var(--fg)}
+.site[data-style=swiss] .timeline .co{font-weight:700}
+.site[data-style=swiss] .now p{font-size:1.5rem;font-weight:500;line-height:1.3}
+
+/* ===== 3. Noir: cuadernillo de Criterion ===== */
+.site[data-style=noir]{line-height:1.75}
+.site[data-style=noir] .inner{max-width:76rem;margin-inline:auto}
+.site[data-style=noir] .name{font:400 1.4rem/1 var(--font-display)}
+.site[data-style=noir] main{display:grid;grid-template-columns:1fr 2fr;column-gap:clamp(2rem,6vw,6rem)}
+.site[data-style=noir] main>section{grid-column:1/-1}
+.site[data-style=noir] .now,.site[data-style=noir] .work,.site[data-style=noir] .contact{display:grid;grid-template-columns:subgrid;align-items:start}
+.site[data-style=noir] .now>*,.site[data-style=noir] .work>*,.site[data-style=noir] .contact>*{grid-column:2}
+.site[data-style=noir] .now>h2,.site[data-style=noir] .work>h2,.site[data-style=noir] .contact>h2{grid-column:1}
+.site[data-style=noir] .hero{margin-top:clamp(3rem,10vh,7rem)}
+.site[data-style=noir] .kicker{color:var(--accent)}
+.site[data-style=noir] h1{max-width:14ch;margin-top:1rem;font-size:clamp(3rem,8vw,6rem);font-weight:400;line-height:.98;letter-spacing:-.02em}
+.site[data-style=noir] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=noir] .lede{margin-top:1.75rem;font-size:1.15rem;color:var(--muted)}
+.site[data-style=noir] h2{font-size:2rem;font-weight:400}
+.site[data-style=noir] h3{font-size:1.6rem;font-weight:400}
+.site[data-style=noir] .now p{font:400 1.6rem/1.35 var(--font-display)}
+.site[data-style=noir] .timeline{margin-top:0}
+.site[data-style=noir] .timeline .yr{color:var(--accent)}
+.site[data-style=noir] .timeline .co{font:400 1.25rem/1.3 var(--font-display)}
+.site[data-style=noir] .shot img{filter:grayscale(1) contrast(1.1)}
+
+/* ===== 4. Art Deco: vestíbulo del Chrysler, simetría y oro ===== */
+.site[data-style=deco]{font-size:1.125rem;line-height:1.75}
+.site[data-style=deco] .inner{max-width:58rem;margin-inline:auto;padding:clamp(1.25rem,4vw,3rem);border:1px solid var(--accent);outline:1px solid var(--accent);outline-offset:6px}
+.site[data-style=deco] .name{font:400 1.25rem/1 var(--font-display);letter-spacing:.15em;color:var(--accent)}
+.site[data-style=deco] .hero,.site[data-style=deco] .now,.site[data-style=deco] .contact{text-align:center}
+.site[data-style=deco] .hero{position:relative;padding-top:2rem}
+.site[data-style=deco] .hero::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:min(46rem,120%);aspect-ratio:2/1;translate:-50% 0;border-radius:999px 999px 0 0;background:repeating-conic-gradient(from -90deg at 50% 100%,#D9B46A21 0 3deg,transparent 3deg 9deg)}
+.site[data-style=deco] .kicker{color:var(--accent);letter-spacing:.2em;text-transform:uppercase;font-size:.9rem}
+.site[data-style=deco] h1{margin-top:1rem;font-size:clamp(2.2rem,5.5vw,4.2rem);font-weight:400;line-height:1.15;letter-spacing:.04em}
+.site[data-style=deco] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=deco] .lede,.site[data-style=deco] .now p,.site[data-style=deco] .contact p{margin-inline:auto}
+.site[data-style=deco] .lede{margin-top:1.5rem;color:var(--muted)}
+.site[data-style=deco] .avail,.site[data-style=deco] .cta{justify-content:center}
+.site[data-style=deco] h2{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;font-size:1.5rem;font-weight:400;letter-spacing:.15em;color:var(--accent)}
+.site[data-style=deco] h2::before,.site[data-style=deco] h2::after{content:"";flex:1;height:5px;border-block:1px solid var(--accent)}
+.site[data-style=deco] h3{font-size:1.2rem;font-weight:400;letter-spacing:.06em;color:var(--accent)}
+.site[data-style=deco] .shot{padding:6px;border:1px solid var(--accent)}
+.site[data-style=deco] .shot img{filter:sepia(.35) contrast(1.05)}
+.site[data-style=deco] .timeline li{grid-template-columns:1fr 11rem 1fr;align-items:baseline}
+.site[data-style=deco] .timeline .yr{text-align:right;color:var(--accent)}
+.site[data-style=deco] .timeline .co{font:400 1.05rem/1.3 var(--font-display);letter-spacing:.08em;text-align:center}
+
+/* ===== 5. Brutalismo: HTML crudo, fuentes del sistema, cero descargas ===== */
+.site[data-style=brutal]{font-size:1.125rem;line-height:1.5}
+.site[data-style=brutal] .top,.site[data-style=brutal] main>section{padding:1rem 1.25rem;background:#fff;border:3px solid #000}
+.site[data-style=brutal] .name{font:900 1.1rem/1 var(--font-display);text-transform:uppercase}
+.site[data-style=brutal] .top nav a,.site[data-style=brutal] .foot a,.site[data-style=brutal] p a{color:var(--accent);text-decoration:underline}
+.site[data-style=brutal] .top nav a:visited,.site[data-style=brutal] p a:visited{color:#551A8B}
+.site[data-style=brutal] .prefs a,.site[data-style=brutal] .style-btn{border-width:3px;background:#fff}
+.site[data-style=brutal] main{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-top:1rem}
+.site[data-style=brutal] main>section{margin-top:0}
+.site[data-style=brutal] .cases,.site[data-style=brutal] .work,.site[data-style=brutal] .contact{grid-column:1/-1}
+.site[data-style=brutal] .kicker{display:inline-block;padding:.1rem .5rem;background:#000;color:#fff}
+.site[data-style=brutal] h1{margin-top:1rem;font-size:clamp(2.2rem,5.5vw,4.4rem);font-weight:900;line-height:1;letter-spacing:-.02em;text-transform:uppercase}
+.site[data-style=brutal] h1 em{font-style:normal;padding:0 .15em;background:#FFE500}
+.site[data-style=brutal] .lede{margin-top:1.25rem}
+.site[data-style=brutal] h2{font-size:1.6rem;font-weight:900;text-transform:uppercase}
+.site[data-style=brutal] h2::before{content:"// " / ""}
+.site[data-style=brutal] h3{font-weight:700}
+.site[data-style=brutal] h3 a{color:var(--accent);text-decoration:underline}
+.site[data-style=brutal] main>.now{background:#000;color:#fff}
+.site[data-style=brutal] main>.now p a{color:#9DB8FF}
+.site[data-style=brutal] .btn{border-width:3px;background:#fff;color:#000}
+.site[data-style=brutal] .btn-primary{background:var(--accent);border-color:#000;color:#fff}
+.site[data-style=brutal] .btn:hover{background:#FFE500;color:#000}
+.site[data-style=brutal] .btn-link{border-color:transparent;background:transparent;color:var(--accent)}
+.site[data-style=brutal] .shot{border:3px solid #000}
+.site[data-style=brutal] .timeline li{border-top:2px solid #000}
+.site[data-style=brutal] .timeline .co{font-family:var(--font-display);font-weight:700}
+.site[data-style=brutal] :focus-visible{outline:4px solid #000;outline-offset:2px;background:#FFE500;color:#000}
+
+/* ===== 6. Bauhaus: cartel de Bayer, forma y color primario ===== */
+.site[data-style=bauhaus] .inner{max-width:72rem;margin-inline:auto}
+.site[data-style=bauhaus] .name{font-size:1.25rem;font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] .top nav a{text-transform:lowercase}
+.site[data-style=bauhaus] .hero{position:relative;min-height:28rem;padding-right:36%}
+.site[data-style=bauhaus] .hero::before{content:"";position:absolute;right:6%;top:0;width:min(22rem,28%);aspect-ratio:1;border-radius:50%;background:var(--accent)}
+.site[data-style=bauhaus] .hero::after{content:"";position:absolute;right:0;bottom:0;width:min(16rem,20%);aspect-ratio:1;background:var(--blue);clip-path:polygon(0 100%,100% 100%,100% 0)}
+.site[data-style=bauhaus] .kicker{font-weight:500}
+.site[data-style=bauhaus] h1{margin-top:1rem;font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:.95;letter-spacing:-.03em;text-transform:lowercase}
+.site[data-style=bauhaus] h1 em{font-style:normal;color:var(--blue)}
+.site[data-style=bauhaus] .lede{margin-top:1.5rem;font-size:1.2rem}
+.site[data-style=bauhaus] h2{font-size:2rem;font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] h3{font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] .now{padding:1.75rem;background:var(--yellow)}
+.site[data-style=bauhaus] .now p{font-size:1.4rem;font-weight:500;line-height:1.35}
+.site[data-style=bauhaus] .timeline li{border-top:2px solid var(--fg)}
+.site[data-style=bauhaus] .timeline .yr{font-weight:700;color:var(--blue)}
+.site[data-style=bauhaus] .timeline .co{font-weight:700}
+.site[data-style=bauhaus] .case:nth-child(2) .shot{border:10px solid var(--blue)}
+.site[data-style=bauhaus] .case-lead .shot{border:10px solid var(--accent)}
+
+/* ===== 7. Risograph: fanzine a dos tintas ===== */
+.site[data-style=riso]::after{content:"";position:absolute;z-index:-1;right:-6rem;bottom:-6rem;width:28rem;aspect-ratio:1;border-radius:50%;opacity:.6;background:radial-gradient(var(--accent) 35%,transparent 37%) 0 0/12px 12px}
+.site[data-style=riso] .inner{max-width:68rem;margin-inline:auto}
+.site[data-style=riso] .name{font:400 1.1rem/1 var(--font-display);text-transform:uppercase}
+.site[data-style=riso] .kicker{display:inline-block;padding:.15rem .6rem;background:var(--tint);transform:rotate(-2deg)}
+.site[data-style=riso] h1{margin-top:1rem;font-size:clamp(2.8rem,7vw,6rem);font-weight:400;line-height:.95;letter-spacing:-.02em;text-transform:uppercase;text-shadow:.06em .04em 0 var(--accent);mix-blend-mode:multiply}
+.site[data-style=riso] h1 em{font-style:normal;background:linear-gradient(transparent 55%,var(--tint) 55%)}
+.site[data-style=riso] .lede{margin-top:1.5rem}
+.site[data-style=riso] h2{font-size:1.75rem;font-weight:400;text-transform:uppercase;text-shadow:.06em .05em 0 var(--accent)}
+.site[data-style=riso] h3{font-size:1.2rem;font-weight:400;text-transform:uppercase}
+.site[data-style=riso] .btn-primary{background:var(--fg);border-color:var(--fg);color:#fff}
+.site[data-style=riso] .now{padding:1.25rem 1.5rem;background:var(--tint);transform:rotate(-1deg)}
+.site[data-style=riso] .shot{background:var(--tint)}
+.site[data-style=riso] .shot img{filter:grayscale(1) contrast(1.2);mix-blend-mode:multiply}
+.site[data-style=riso] .case:nth-child(2){transform:rotate(1deg)}
+.site[data-style=riso] .timeline li{border-top:2px dotted var(--fg)}
+.site[data-style=riso] .timeline .co{font-weight:700}
+
+/* ===== 8. Terminal: manual de un VT100 ===== */
+.site[data-style=terminal]{text-shadow:0 0 6px #78FF7859}
+.site[data-style=terminal] .inner{max-width:62rem;margin-inline:auto}
+.site[data-style=terminal] .name::before{content:"~/" / "";color:var(--muted)}
+.site[data-style=terminal] .top nav a::before{content:"[" / ""}
+.site[data-style=terminal] .top nav a::after{content:"]" / ""}
+.site[data-style=terminal] .kicker{color:var(--muted);font-weight:400}
+.site[data-style=terminal] .kicker::before{content:"> " / "";color:var(--accent)}
+.site[data-style=terminal] h1{margin-top:.75rem;font-size:clamp(3rem,7vw,6rem);font-weight:400;line-height:1;color:#D6FFD0}
+.site[data-style=terminal] h1 em{font-style:normal;color:var(--accent)}
+/* el cursor parpadea 3 s y se queda fijo: WCAG 2.2.2 pide pausa si dura más de 5 s */
+.site[data-style=terminal] h1::after{content:"█" / "";animation:pf-blink 1s steps(1) 3}
+@keyframes pf-blink{50%{opacity:0}}
+.site[data-style=terminal] .lede{margin-top:1.5rem}
+.site[data-style=terminal] h2{font-size:2.1rem;font-weight:400;color:var(--accent);text-transform:lowercase}
+.site[data-style=terminal] h2::before{content:"$ cat " / "";color:var(--muted)}
+.site[data-style=terminal] h2::after{content:".md" / ""}
+.site[data-style=terminal] h3{font-size:1.6rem;font-weight:400}
+.site[data-style=terminal] .btn{border-width:1px}
+.site[data-style=terminal] .btn::before{content:"[" / ""}
+.site[data-style=terminal] .btn::after{content:"]" / ""}
+.site[data-style=terminal] .btn-primary{background:var(--fg);border-color:var(--fg);color:var(--bg);text-shadow:none}
+.site[data-style=terminal] .shot{border:1px dashed var(--line)}
+.site[data-style=terminal] .shot img{filter:grayscale(1) sepia(1) hue-rotate(60deg) saturate(2.5) brightness(.8)}
+.site[data-style=terminal] .timeline li{border-top-style:dashed}
+.site[data-style=terminal] .timeline .yr{color:var(--accent)}
+
+/* ===== 9. Blueprint: lámina de arquitecto (guiño a la etapa de arquitectura) ===== */
+.site[data-style=blueprint]{font-size:1rem;background-image:linear-gradient(#ffffff12 1px,transparent 1px),linear-gradient(90deg,#ffffff12 1px,transparent 1px),linear-gradient(#ffffff24 1px,transparent 1px),linear-gradient(90deg,#ffffff24 1px,transparent 1px);background-size:20px 20px,20px 20px,100px 100px,100px 100px}
+.site[data-style=blueprint] .inner{max-width:70rem;margin-inline:auto;counter-reset:fig}
+.site[data-style=blueprint] .top{padding-bottom:.75rem;border-bottom:1px solid var(--line)}
+.site[data-style=blueprint] .name{font:400 1.45rem/1 var(--font-display)}
+.site[data-style=blueprint] .prefs a,.site[data-style=blueprint] .style-btn,.site[data-style=blueprint] .btn{border-style:dashed}
+.site[data-style=blueprint] main>section{padding:1.5rem;border:1px dashed var(--line);counter-increment:fig}
+.site[data-style=blueprint] .kicker{color:var(--accent);font-weight:400}
+.site[data-style=blueprint] h1{margin-top:.75rem;font-size:clamp(2.6rem,6vw,5.2rem);font-weight:400;line-height:1.05}
+.site[data-style=blueprint] h1 em{font-style:normal;color:var(--accent);text-decoration:underline 2px;text-underline-offset:.15em}
+.site[data-style=blueprint] h1::after{content:"←— elevation A · scale 1:1 —→" / "";display:block;margin-top:.75rem;font:400 .8rem/1 var(--font-body);letter-spacing:.1em;color:var(--muted)}
+.site[data-style=blueprint] .lede{margin-top:1.25rem;color:var(--muted)}
+.site[data-style=blueprint] h2{font-size:1.9rem;font-weight:400}
+.site[data-style=blueprint] h2::before{content:"A-0" counter(fig) "  " / "";font:600 .8rem/1 var(--font-body);letter-spacing:.1em;color:var(--accent);vertical-align:middle}
+.site[data-style=blueprint] h3{font-size:1.5rem;font-weight:400}
+.site[data-style=blueprint] .btn-primary{border-style:solid}
+.site[data-style=blueprint] .shot{border:1px dashed var(--line);background:var(--bg)}
+.site[data-style=blueprint] .shot img{filter:grayscale(1) contrast(1.15);mix-blend-mode:luminosity;opacity:.9}
+.site[data-style=blueprint] .timeline li{border-top-style:dashed}
+.site[data-style=blueprint] .timeline .yr{color:var(--accent)}
+.site[data-style=blueprint] .foot{border:1px solid var(--line);padding:.75rem 1rem}
+.site[data-style=blueprint] .foot::after{content:"SHEET 01/01 · REV. 2026" / "";margin-left:auto;letter-spacing:.1em;color:var(--accent)}
+
+/* ===== 10. Retro OS: escritorio de los 90, cada sección es una ventana ===== */
+.site[data-style=retro]{font-size:1rem;line-height:1.5}
+.site[data-style=retro] .inner{max-width:74rem;margin-inline:auto}
+.site[data-style=retro] .top{padding:.3rem .5rem;background:#C0C0C0;border:2px outset #e8e8e8}
+.site[data-style=retro] .name{padding:.2rem .6rem;border:2px outset #e8e8e8;font-weight:700}
+.site[data-style=retro] .name::before{content:"◧ " / ""}
+.site[data-style=retro] .prefs a,.site[data-style=retro] .style-btn,.site[data-style=retro] .btn{border:2px outset #e8e8e8;background:#C0C0C0;color:#000}
+.site[data-style=retro] .btn:active,.site[data-style=retro] .style-btn:active{border-style:inset;transform:none}
+.site[data-style=retro] .btn-primary{outline:1px solid #000;font-weight:700}
+.site[data-style=retro] .style-btn .sw{color:#fff}
+.site[data-style=retro] .btn-link{border:0;background:transparent;color:var(--accent)}
+.site[data-style=retro] main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1.5rem;margin-top:2rem}
+.site[data-style=retro] main>section{margin-top:0;padding:3px 3px 1.1rem;background:#C0C0C0;border:2px outset #e8e8e8}
+.site[data-style=retro] main>section>*:not(h2):not(.kicker){margin-inline:1rem}
+.site[data-style=retro] h2,.site[data-style=retro] .kicker{display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;padding:.3rem .6rem;background:linear-gradient(90deg,#000080,#1084D0);color:#fff;font:700 1.15rem/1.3 var(--font-display)}
+.site[data-style=retro] h2::after,.site[data-style=retro] .kicker::after{content:"_ □ ×" / "";letter-spacing:.3em;font-weight:400}
+.site[data-style=retro] .hero{grid-column:1/9}
+.site[data-style=retro] .now{grid-column:9/-1;align-self:start;margin-top:4rem!important}
+.site[data-style=retro] .cases{grid-column:1/-1}
+.site[data-style=retro] .work{grid-column:1/9}
+.site[data-style=retro] .contact{grid-column:9/-1;align-self:start}
+.site[data-style=retro] h1{margin-block:1rem .5rem;font-size:clamp(2rem,4.5vw,3.4rem);font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.site[data-style=retro] h1 em{padding:0 .2em;font-style:normal;background:#000080;color:#fff}
+.site[data-style=retro] .shot{border:2px inset #e8e8e8}
+.site[data-style=retro] .timeline{background:#fff;border:2px inset #e8e8e8}
+.site[data-style=retro] .timeline li{padding:.4rem .6rem;border-top-color:#C0C0C0}
+.site[data-style=retro] .timeline .yr,.site[data-style=retro] .timeline .role{color:#000}
+.site[data-style=retro] h3 a{color:var(--accent);text-decoration:underline}
+.site[data-style=retro] .foot,.site[data-style=retro] .foot a{color:#fff;border-top-color:#ffffff80}
+.site[data-style=retro] :focus-visible{outline:2px dotted #000;outline-offset:2px}
+
+/* ===== página de caso de estudio ===== */
+.crumb{font-size:.95rem;color:var(--muted)}
+.crumb a{text-decoration:underline;text-underline-offset:.2em;color:var(--fg)}
+.site .hero .kicker{margin-top:1rem}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1rem var(--gap);margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--line)}
+.facts dt{font-size:.9rem;color:var(--muted)}
+.facts dd{margin:0;font-weight:600}
+.doc>p{max-width:65ch}
+.doc>h2+p,.doc p+p{margin-top:1rem}
+.doc>h2{margin-bottom:.25rem}
+.shot figcaption{margin-top:.6rem;font-size:.9rem;color:var(--muted)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);margin-top:1.25rem}
+.split h3{margin-bottom:.6rem}
+.split ul,.plain{display:grid;gap:.5rem}
+.split li,.plain li{max-width:60ch;padding-top:.5rem;border-top:1px solid var(--line)}
+.plain{margin-top:1rem}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.75rem;margin-top:1.25rem;counter-reset:step}
+.flow li{display:grid;align-content:start;gap:.35rem;padding:.9rem;border:1px solid var(--line);counter-increment:step}
+.flow li::before{content:counter(step) / "";font:700 1.5rem/1 var(--font-display);color:var(--accent)}
+.flow span{font-size:.92rem;color:var(--muted)}
+.table-wrap{margin-top:1.25rem;overflow-x:auto}
+.data{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.data th,.data td{padding:.75rem 1rem .75rem 0;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.data thead th{border-top:0;font-size:.9rem;font-weight:600;color:var(--muted)}
+.data tbody th{font-weight:700;min-width:11rem}
+.data td{min-width:12rem}
+.data-tight td{min-width:9rem}
+.data-tight tbody th{min-width:8.5rem}
+.data .num{min-width:0;white-space:nowrap;text-align:right;font-weight:600}
+.data code{font-size:.92em}
+
+/* colocación de las secciones nuevas en los estilos con rejilla */
+.site[data-style=swiss] .hero>.crumb,.site[data-style=swiss] .hero>.facts{grid-column:1/-1}
+.site[data-style=swiss] main>.doc{grid-column:1/-1;display:grid;grid-template-columns:subgrid}
+.site[data-style=swiss] main>.doc>*{grid-column:5/-1}
+.site[data-style=swiss] main>.doc>h2{grid-column:1/5}
+.site[data-style=swiss] .shot-wide{grid-column:1/-1!important}
+.site[data-style=noir] .doc{display:grid;grid-template-columns:subgrid;align-items:start}
+.site[data-style=noir] .doc>*{grid-column:2}
+.site[data-style=noir] .doc>h2{grid-column:1}
+.site[data-style=noir] .doc>.shot-wide{grid-column:1/-1}
+.site[data-style=brutal] main>.hero,.site[data-style=brutal] main>.doc{grid-column:1/-1}
+.site[data-style=retro] main>.hero,.site[data-style=retro] main>.doc,.site[data-style=retro] main>.contact{grid-column:1/-1}
+.site[data-style=retro] .data,.site[data-style=retro] .flow li{background:#fff}
+.site[data-style=retro] .data{border:2px inset #e8e8e8}
+.site[data-style=retro] .data th,.site[data-style=retro] .data td{padding-left:.6rem}
+.site[data-style=brutal] .data th,.site[data-style=brutal] .data td{border-top:2px solid #000}
+.site[data-style=brutal] .flow li{border:3px solid #000}
+.site[data-style=terminal] .data th,.site[data-style=terminal] .data td,.site[data-style=terminal] .flow li{border-style:dashed}
+.site[data-style=blueprint] .data th,.site[data-style=blueprint] .data td,.site[data-style=blueprint] .flow li{border-style:dashed}
+.site[data-style=riso] .flow li::before{color:var(--fg);text-shadow:.06em .05em 0 var(--accent)}
+.site[data-style=riso] .flow li:nth-child(odd){background:var(--tint)}
+.site[data-style=bauhaus] .flow li{border:2px solid var(--fg)}
+.site[data-style=bauhaus] .flow li:nth-child(3n+1)::before{color:var(--accent)}
+.site[data-style=bauhaus] .flow li:nth-child(3n+2)::before{color:var(--blue)}
+.site[data-style=bauhaus] .flow li:nth-child(3n)::before{color:var(--fg)}
+.site[data-style=deco] .facts,.site[data-style=deco] .crumb{text-align:center}
+.site[data-style=deco] .flow li{border-color:var(--accent)}
+@media (max-width:760px){
+  .split{grid-template-columns:1fr}
+  .site main>.doc{display:block!important}
+}
+
+.shots-app{margin-top:1.5rem}
+/* video del recorrido: capítulos como botones y transcripción a la vista */
+.tour{margin-top:1.5rem}
+.tour video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000}
+.chapters{display:flex;flex-wrap:wrap;gap:.25rem 1.25rem;margin-top:.9rem}
+.chapters button{min-height:2rem;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
+.chapters button:hover{text-underline-offset:.3em}
+.chapters .meta{font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.transcript{max-width:65ch;margin-top:.9rem}
+.transcript summary{font-weight:600;cursor:pointer}
+.transcript ol{display:grid;gap:.6rem;margin-top:.75rem}
+@media (max-width:760px){.chapters button,.transcript summary{min-height:44px}}
+.app-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.shot .app-row img{aspect-ratio:16/9}
+@media (max-width:760px){.app-row{grid-template-columns:1fr}}
+/* ===== móvil: una columna, mismas tres zonas, objetivos de 44 px ===== */
+@media (max-width:760px){
+  .site main,.site main>section,.site .hero,.site .inner,.site .cases ul,.site .case{display:block!important}
+  .site .case+.case{margin-top:var(--gap)}
+  .site .case-body{margin-top:1rem}
+  .site .timeline li{grid-template-columns:5rem 1fr!important}
+  .site .timeline .role{grid-column:2;text-align:left!important}
+  .top nav a,.prefs a,.style-btn{min-height:44px}
+  .picker{top:auto;bottom:0;left:0;right:0;width:100%;max-height:85vh}
+  .site[data-style=brutal] main>section{margin-top:1rem}
+  .site[data-style=retro] main>section{margin-top:1.5rem!important}
+  .site[data-style=bauhaus] .hero{min-height:0;padding-right:0}
+  .site[data-style=bauhaus] .hero::before,.site[data-style=bauhaus] .hero::after{display:none}
+}
+
+/* ===== movimiento: un solo cambio de 250 ms; sin movimiento si el sistema lo pide ===== */
+::view-transition-group(root){animation-duration:.25s;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+  .site *,.site *::before,.site *::after{transition:none!important;animation:none!important}
+}
+
+/* ===== impresión: neutra, sea cual sea el estilo ===== */
+@media print{
+  .prefs,.skip,.top nav,.picker,.shot{display:none!important}
+  .site{padding:0;background:#fff!important;color:#000!important;font:11pt/1.45 Georgia,serif!important}
+  .site *{color:#000!important;background:none!important;text-shadow:none!important;border-color:#000!important;transform:none!important}
+  .site *::before,.site *::after{content:none!important}
+}
+</style>
+</head>
+<body>
+
+
+<div class="site" id="site">
+<script>/* sin parpadeo: decide el estilo antes de pintar (URL > guardado > sistema) */
+(function(s){var k=['classic','swiss','noir','deco','brutal','bauhaus','riso','terminal','blueprint','retro'],q=new URLSearchParams(location.search).get('style'),v=null;try{v=localStorage.getItem('pf-style')}catch(e){}var c=k.indexOf(q)>-1?q:k.indexOf(v)>-1?v:'auto';s.dataset.choice=c;s.dataset.style=c!=='auto'?c:(matchMedia('(prefers-color-scheme: dark)').matches?'noir':'classic')})(document.currentScript.parentNode);
+</script>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="inner">
+    <header class="top">
+      <a class="name" href="/">Eduardo González</a>
+      <nav aria-label="Main"><ul>
+        <li><a href="/#work" aria-current="page">Work</a></li>
+      </ul></nav>
+      <div class="prefs">
+        <button type="button" class="style-btn" popovertarget="style-picker"><span class="sw" aria-hidden="true">Aa</span>Style<span class="vh">:</span> <span id="style-current" class="vh"></span></button>
+      </div>
+    </header>
+
+    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+      <h2 id="picker-h">Choose a style</h2>
+      <p class="picker-note">Same content in ten visual styles. Every one passes WCAG 2.2 AA.</p>
+      <fieldset>
+        <legend class="vh">Default</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="auto"><span class="sw sw-auto" aria-hidden="true"></span><span><b>Match my system</b><small>Light: New classic. Dark: Noir.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Quiet</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="classic"><span class="sw" data-style="classic" aria-hidden="true">Aa</span><span><b>New classic</b><small>A university-press book.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="swiss"><span class="sw" data-style="swiss" aria-hidden="true">Aa</span><span><b>Swiss</b><small>A 12-column poster grid.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="noir"><span class="sw" data-style="noir" aria-hidden="true">Aa</span><span><b>Noir</b><small>Dark, with one amber accent.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="deco"><span class="sw" data-style="deco" aria-hidden="true">Aa</span><span><b>Art Deco</b><small>Symmetry and gold.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Bold</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="brutal"><span class="sw" data-style="brutal" aria-hidden="true">Aa</span><span><b>Brutalism</b><small>Raw HTML, system fonts.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="bauhaus"><span class="sw" data-style="bauhaus" aria-hidden="true">Aa</span><span><b>Bauhaus</b><small>Primary colors and shapes.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="riso"><span class="sw" data-style="riso" aria-hidden="true">Aa</span><span><b>Risograph</b><small>A two-ink zine.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Interface</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="terminal"><span class="sw" data-style="terminal" aria-hidden="true">Aa</span><span><b>Terminal</b><small>A VT100 manual.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="blueprint"><span class="sw" data-style="blueprint" aria-hidden="true">Aa</span><span><b>Blueprint</b><small>An architect's drawing.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="retro"><span class="sw" data-style="retro" aria-hidden="true">Aa</span><span><b>Retro OS</b><small>A 90s desktop.</small></span></label>
+        </div>
+      </fieldset>
+    </div>
+    <noscript><style>.style-btn{display:none!important}</style></noscript>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="h-hero">
+        <p class="crumb"><a href="/#work">Work</a> <span aria-hidden="true">/</span> Accessibility on sitimm.org</p>
+        <p class="kicker">Accessibility case · sitimm.org · 2026</p>
+        <h1 id="h-hero">Making accessibility hard to <em>break</em>.</h1>
+        <p class="lede">sitimm.org serves a union of 70,000 members in 8 languages. This is what failed, the WCAG criterion behind each failure, how it was fixed, and the checks that keep it fixed.</p>
+        <dl class="facts">
+          <div><dt>My role</dt><dd>The target, the rules and the review. AI agents wrote the fixes; a second model reviewed them.</dd></div>
+          <div><dt>Target</dt><dd>WCAG 2.2 AA</dd></div>
+          <div><dt>Checks</dt><dd>30 lint rules and one of my own, typed components, keyboard tests, axe on six flows in light and dark</dd></div>
+          <div><dt>Languages</dt><dd>Every label and announcement in 8</dd></div>
+        </dl>
+      </section>
+
+      <section class="doc" aria-labelledby="h-shot">
+        <h2 id="h-shot" class="vh">Screen</h2>
+        <figure class="shot shot-wide"><img src="/img/shot-a11y-skip.jpg" width="1568" height="782" alt="sitimm.org after one press of the Tab key: a “Skip to main content” link appears at the top left, outlined, above the site's red header.">
+          <figcaption>sitimm.org after one press of Tab. The first stop is a link that skips to the main content.</figcaption>
+        </figure>
+      </section>
+
+      <section class="doc" aria-labelledby="h-why">
+        <h2 id="h-why">Why this one</h2>
+        <p>At Drift I owned accessibility for three years and did most of it by hand. At SITIMM the job changed: I'm one engineer directing AI agents, and I can't read every line they write. So the work became making the wrong thing hard to ship.</p>
+      </section>
+
+      <section class="doc" aria-labelledby="h-fixes">
+        <h2 id="h-fixes">Before and after</h2>
+        <div class="table-wrap" role="region" aria-labelledby="h-fixes" tabindex="0">
+          <table class="data data-tight">
+            <caption class="vh">Accessibility failures on sitimm.org, the WCAG criterion, and the state before and after the fix</caption>
+            <thead><tr><th scope="col">What failed</th><th scope="col">WCAG</th><th scope="col">Before</th><th scope="col">After</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">A dialog named “Close”</th><td>4.1.2 Name, Role, Value</td><td>While a magazine loaded, the dialog's only name was its close button's label. A screen reader announced the whole dialog as “Close”.</td><td>It has a real name from the first frame. The shared modal now requires a title in its types, so a dialog with no name doesn't compile.</td></tr>
+              <tr><th scope="row">Radio groups that weren't</th><td>2.1.1 Keyboard<br>4.1.2 Name, Role, Value</td><td>Every option was its own Tab stop and the arrow keys did nothing.</td><td>One Tab stop. Arrows move and select, and wrap around. Space selects.</td></tr>
+              <tr><th scope="row">A combobox in name only</th><td>4.1.2 Name, Role, Value<br>4.1.3 Status Messages</td><td>The company search called itself a combobox but had no arrow keys. Picking a result dropped focus on the page body.</td><td>A plain text field, a status line that says “searching”, “5 found” or “no results”, and a list of buttons. Focus returns to the field.</td></tr>
+              <tr><th scope="row">Focus lost after signing in</th><td>2.4.3 Focus Order</td><td>The button that opened the sign-in dialog was gone once you signed in, so focus fell to the top of the page.</td><td>Focus moves to the account menu that took its place.</td></tr>
+              <tr><th scope="row">A heading that was decoration</th><td>1.3.1 Info and Relationships<br>1.4.3 Contrast</td><td>The 404 page's main heading was a giant, pale “404”. The real message was a second-level heading.</td><td>The number is hidden from assistive technology. The message is the main heading.</td></tr>
+              <tr><th scope="row">Silent form errors</th><td>3.3.1 Error Identification<br>4.1.3 Status Messages</td><td>The membership form showed errors without moving focus or announcing them.</td><td>Focus goes to the first invalid field. Errors and success are announced.</td></tr>
+              <tr><th scope="row">A step nobody announced</th><td>3.3.2 Labels or Instructions<br>4.1.3 Status Messages</td><td>Deleting an account asks for the password again. A screen reader user got a new field with no explanation.</td><td>The field describes the extra step before it appears, and the step is announced when it does.</td></tr>
+              <tr><th scope="row">A close button lost on dark photos</th><td>1.4.11 Non-text Contrast</td><td>A dark close button sat on top of cover photos.</td><td>A white X on a dark scrim with a white ring: at least 5.7:1 on any photo.</td></tr>
+              <tr><th scope="row">Reduced motion meant no cue</th><td>2.3.3 Animation from Interactions (AAA)</td><td>With reduced motion on, the hero text switched language with no transition at all.</td><td>A fade with no movement. Less motion, and still a cue that something changed.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc" aria-labelledby="h-keep">
+        <h2 id="h-keep">What keeps it fixed</h2>
+        <ol class="flow">
+          <li><b>Lint</b><span>30 accessibility rules run on the whole repo before every push, plus one I wrote after the scan below: the brand red can't be used as a text colour.</span></li>
+          <li><b>Types</b><span>A dialog can't be built without a name. The compiler says no before a reviewer has to.</span></li>
+          <li><b>Keyboard tests</b><span>Each picker is tested for Tab, arrows, wrapping and Space. Sign-up runs end to end with the keyboard only.</span></li>
+          <li><b>axe</b><span>A test loads six flows in a real browser, in light mode and again in dark, and fails on any serious or critical violation. It runs before every push that changes the interface. Its list of exceptions is empty.</span></li>
+          <li><b>One focus ring</b><span>Every interactive element shares one visible focus style, shown to keyboard users.</span></li>
+        </ol>
+      </section>
+
+      <section class="doc" aria-labelledby="h-today">
+        <h2 id="h-today">Then I scanned production</h2>
+        <p>For this page I scanned production myself, on 20 and 21 November 2026: 27 public pages, in light and dark mode, with axe-core and the WCAG 2.0 to 2.2 rules, levels A and AA. I expected a clean report. I didn't get one.</p>
+        <div class="table-wrap" role="region" aria-labelledby="h-today" tabindex="0">
+          <table class="data data-tight">
+            <caption class="vh">What the scan of sitimm.org found on 20 and 21 November 2026</caption>
+            <thead><tr><th scope="col">What the scan found</th><th scope="col">Where</th><th scope="col">Measured</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">The brand red used as a text colour on dark surfaces</th><td>The cookie banner on every page, the 404 links, program and collection pages</td><td>3.2 to 3.8:1. AA asks for 4.5:1.</td></tr>
+              <tr><th scope="row">The same red on tinted backgrounds, in light mode</th><td>Program and collection pages</td><td>4.1 to 4.4:1</td></tr>
+              <tr><th scope="row">The search highlight in dark mode</th><td>Search results</td><td>1.5:1</td></tr>
+              <tr><th scope="row">White text on coloured type badges</th><td>Search results</td><td>Six of seven colours under AA. The worst: 2.2:1.</td></tr>
+              <tr><th scope="row">Grey text tuned against white, on a page that is pale pink</th><td>Blog and gallery pages, search</td><td>4.4:1</td></tr>
+              <tr><th scope="row">Filter labels in dark mode</th><td>Magazines</td><td>4.1:1</td></tr>
+              <tr><th scope="row">Controls whose name left out text printed on them</th><td>113 controls on six pages</td><td>2.5.3 Label in Name. Reported only by the newer axe version in the repo.</td></tr>
+              <tr><th scope="row">Headings</th><td>The home page and four others</td><td>Two top-level headings on the home page. A skipped level on four pages.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><b>Why nothing caught it.</b> The list above describes the test as the pull request leaves it. The day I scanned, it only ran in light mode, on four flows, and only in CI. CI had been off since September. When I ran it by hand it could not even start: the browser it needed was not installed. Had it started, it would have failed on a rule that a dependency update had added. The check was easy to break, and it had broken without a sound.</p>
+        <p><b>What I changed.</b> One pull request, the next day. It is in review: sitimm.org gets these fixes when it merges.</p>
+        <ul class="plain">
+          <li><b>One cause, fixed once.</b> Red text now uses a colour token that changes with the theme. That was 140 uses in 65 files, and the lint rule keeps the old one out.</li>
+          <li><b>Cards.</b> A card that was one big link now has its link on the title, stretched over the card. A card that was one big button is now a box with a button over it, so the heading inside is a real heading again.</li>
+          <li><b>The test.</b> Six flows, both themes. It waits for the theme and the cookie banner before it measures, because both arrive after the page loads. It adds about a minute to a push.</li>
+          <li><b>Proof that it works.</b> I put three of the old failures back. The six dark checks failed, on 1, 4 and 7 elements. The six light checks passed, which is exactly why the old test never saw them.</li>
+        </ul>
+        <p>On the pull request's preview build, the same 27 pages come back clean in both themes: no violations, one top-level heading per page, no skipped levels.</p>
+        <p><b>I changed my mind about the “404”.</b> The page shows a giant, pale “404” above the real message. In the first draft of this page I defended it as decoration, exempt from contrast. Then I made it readable. Hiding something from a screen reader doesn't hide it from a person with low vision.</p>
+        <p><b>Left for a person.</b> axe could not measure text over gradients and photos, between 54 and 182 elements per page. Those need checking by eye and with a contrast picker.</p>
+      </section>
+
+      <section class="doc" aria-labelledby="h-limits">
+        <h2 id="h-limits">What automated checks can't tell me</h2>
+        <ul class="plain">
+          <li><b>They find about half.</b> The rest needs a keyboard, a screen reader and time. The focus lost after signing in was caught in review, on the third pass. No scanner flags that.</li>
+          <li><b>A scanner is a version.</b> The same pages passed one release of axe and failed the next. A clean report says which rules ran, not that the page is accessible.</li>
+          <li><b>Not verified yet:</b> the map of union offices and the magazine's PDF reader.</li>
+          <li><b>Next:</b> the test covers six flows. The other 21 pages were clean in the scan, and nothing but the lint rule keeps them that way.</li>
+        </ul>
+      </section>
+
+      <section class="contact" aria-labelledby="h-contact">
+        <h2 id="h-contact">Want the details?</h2>
+        <p>I can walk you through any of these fixes, the tests behind them and what I'd check next.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="mailto:eduardo@kerbero94.dev">Email me</a>
+          <a class="btn btn-link" href="/sitimmvito/">Next case: teaching an assistant to find the right answer</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <a href="https://www.linkedin.com/in/eduglezzvl94">LinkedIn</a><a href="https://github.com/kerbero1994">GitHub</a><span>© 2026 Eduardo González</span>
+    </footer>
+  </div>
+  <p class="vh" id="style-status" aria-live="polite"></p>
+</div>
+
+<script>
+(function(){
+  const NAMES={classic:'New classic',swiss:'Swiss',noir:'Noir',deco:'Art Deco',brutal:'Brutalism',bauhaus:'Bauhaus',riso:'Risograph',terminal:'Terminal',blueprint:'Blueprint',retro:'Retro OS'};
+  const site=document.getElementById('site');
+  const dark=matchMedia('(prefers-color-scheme: dark)');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+  const sysStyle=()=>dark.matches?'noir':'classic';
+  const meta=document.getElementById('theme-color');
+
+  function paint(style,choice){
+    site.dataset.style=style;site.dataset.choice=choice;
+    document.getElementById('style-current').textContent=NAMES[style];
+    site.querySelectorAll('input[name=style]').forEach(r=>{r.checked=r.value===choice});
+    meta.content=document.documentElement.style.background=getComputedStyle(site).getPropertyValue('--bg').trim();
+  }
+  function choose(choice){
+    const style=choice==='auto'?sysStyle():choice;
+    try{choice==='auto'?localStorage.removeItem('pf-style'):localStorage.setItem('pf-style',choice)}catch(e){}
+    const u=new URL(location.href);
+    choice==='auto'?u.searchParams.delete('style'):u.searchParams.set('style',choice);
+    history.replaceState(null,'',u);
+    const run=()=>paint(style,choice);
+    document.startViewTransition&&!reduce.matches?document.startViewTransition(run):run();
+    document.getElementById('style-status').textContent='Style: '+NAMES[style]+(choice==='auto'?' (matches your system)':'');
+  }
+  paint(site.dataset.style,site.dataset.choice);
+  site.querySelectorAll('input[name=style]').forEach(r=>r.addEventListener('change',()=>choose(r.value)));
+  dark.addEventListener('change',()=>{if(site.dataset.choice==='auto')paint(sysStyle(),'auto')});
+
+})();
+</script>
+<script>
+document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',async()=>{
+  const v=b.closest('figure').querySelector('video');
+  v.currentTime=+b.dataset.seek;v.play();
+}));
+</script>
+</body>
+</html>
