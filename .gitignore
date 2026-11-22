@@ -2,3 +2,4 @@
 node_modules/
 .netlify/
 checks/result.json
+cv/*.pdf
