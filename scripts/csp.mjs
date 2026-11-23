@@ -33,7 +33,8 @@ export function policy() {
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'none'",
-    'upgrade-insecure-requests',
+    // No upgrade-insecure-requests: every URL is relative and HSTS already forces HTTPS;
+    // WebKit would also upgrade http://127.0.0.1 and break local and CI tests.
   ];
   // frame-ancestors only works as a header; a <meta> that carries it logs a console error.
   return { meta: base.join('; '), header: [...base, "frame-ancestors 'none'"].join('; ') };
