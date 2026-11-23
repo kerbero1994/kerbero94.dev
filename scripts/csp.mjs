@@ -9,8 +9,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const PAGES = ['/', '/sitimm/', '/accessibility/', '/sitimmvito/', '/architecture/'].map((p) => `${ROOT}site${p}index.html`);
 const TOML = `${ROOT}netlify.toml`;
-const ANALYTICS = 'https://static.cloudflareinsights.com';
-const BEACON = 'https://cloudflareinsights.com';
+// Netlify Real User Monitoring: Netlify injects <script src="/.netlify/scripts/rum"> in
+// production (same origin, covered by 'self'); it posts the metrics to this collector.
+const RUM_COLLECTOR = 'https://ingesteer.services-prod.nsvcs.net';
 
 const hash = (text) => `'sha256-${createHash('sha256').update(text, 'utf8').digest('base64')}'`;
 const inline = (html, tag) => [...html.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g'))].map((m) => m[1]);
@@ -24,12 +25,12 @@ export function policy() {
   }
   const base = [
     "default-src 'self'",
-    `script-src 'self' ${[...scripts].sort().join(' ')} ${ANALYTICS}`,
+    `script-src 'self' ${[...scripts].sort().join(' ')}`,
     `style-src 'self' ${[...styles].sort().join(' ')}`,
     "img-src 'self' data:",
     "font-src 'self'",
     "media-src 'self'",
-    `connect-src 'self' ${BEACON}`,
+    `connect-src 'self' ${RUM_COLLECTOR}`,
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'none'",

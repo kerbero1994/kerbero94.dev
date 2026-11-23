@@ -58,7 +58,7 @@ for (const path of PAGES) {
       ...[...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')),
       ...[...document.querySelectorAll('[src^="/"], [poster^="/"]')].map((e) => e.getAttribute('src') || e.getAttribute('poster')),
       ...[...document.querySelectorAll('[srcset]')].flatMap((e) => e.getAttribute('srcset').split(',').map((c) => c.trim().split(/\s+/)[0])),
-      ...[...document.querySelectorAll('link[rel=preload][href^="/"]')].map((l) => l.getAttribute('href')),
+      ...[...document.querySelectorAll('link[rel=preload][href^="/"], link[rel~=icon], link[rel=apple-touch-icon]')].map((l) => l.getAttribute('href')),
     ];
     const missing = refs.filter((r) => !r.startsWith('//') && !existsSync(fileFor(r)));
     assert.deepEqual(missing, []);
@@ -68,6 +68,11 @@ for (const path of PAGES) {
     }
   });
 }
+
+test('favicon.ico exists for clients that ask for it by default', () => {
+  const ico = readFileSync(join(SITE, 'favicon.ico'));
+  assert.deepEqual([...ico.subarray(0, 4)], [0, 0, 1, 0], 'ICO header');
+});
 
 test('titles are unique', () => {
   const titles = PAGES.map((p) => load(p).document.title);

@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: 22 }
+        with: { node-version: 22, cache: npm }
       - name: Deploy to production
         id: deploy
         env:
@@ -59,6 +59,9 @@ jobs:
         run: bash checks/smoke.sh | tee smoke.txt
       - name: Security headers grade A+ (Mozilla HTTP Observatory)
         run: bash checks/observatory.sh | tee observatory.txt
+      - run: npm ci
+      - name: No console errors or CSP violations in production (real browser)
+        run: node checks/prod-console.cjs | tee console.txt
       - name: Tag a release
         id: release
         env:
@@ -83,6 +86,7 @@ jobs:
 
           - Smoke test: $(grep -c '^ok' smoke.txt) checks passed ($(grep -o 'certificate: [0-9]* days left' smoke.txt))
           - $(head -1 observatory.txt)
+          - Browser check: $(tail -1 console.txt)
           - Netlify deploy \`${{ steps.deploy.outputs.id }}\` · release [${{ steps.release.outputs.tag }}](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag }})
 
           <sub>[Run]($RUN) · rollback: Actions › Rollback › Run workflow (restores the previous deploy, no credits)</sub>"
