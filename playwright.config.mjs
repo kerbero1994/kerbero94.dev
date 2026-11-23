@@ -15,8 +15,9 @@ export default defineConfig({
   reporter: CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL: 'http://127.0.0.1:8791', reducedMotion: 'reduce', trace: 'retain-on-failure' },
   webServer: { command: 'npm run serve', url: 'http://127.0.0.1:8791/', reuseExistingServer: !CI },
-  // Baselines are Linux renders made in CI (see README); no platform suffix on purpose.
-  snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
+  // Visual baselines are Linux renders made in CI (see README); no platform suffix on purpose.
+  // ARIA snapshots (text) live next to them, under tests/e2e/__snapshots__.
+  snapshotPathTemplate: '{testDir}/__snapshots__/{arg}{ext}',
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002, animations: 'disabled', caret: 'hide' } },
   projects: [
     { name: 'chrome', testDir: 'tests/e2e', use: { ...devices['Desktop Chrome'], channel: 'chrome' } },

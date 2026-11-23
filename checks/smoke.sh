@@ -13,6 +13,8 @@ check "https://$HOST/eduardo-gonzalez-cv.pdf" 200 application/pdf
 check "https://$HOST/og.png" 200 image/png
 check "https://$HOST/sitemap.xml" 200
 check "https://$HOST/robots.txt" 200
+check "https://$HOST/.well-known/security.txt" 200 text/plain
+check "https://$HOST/fonts/bodoni-moda.woff2" 200 font/woff2
 check "http://$HOST/" 301
 check "https://www.$HOST/" 301
 end=$(echo | openssl s_client -servername "$HOST" -connect "$HOST:443" 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)

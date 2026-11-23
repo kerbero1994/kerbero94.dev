@@ -1,0 +1,38 @@
+{
+  "version": "0.2",
+  "language": "en-US",
+  "ignoreRegExpList": [
+    "/'s\\b/g"
+  ],
+  "words": [
+    "Celaya",
+    "Daniela",
+    "FONACOT",
+    "frontends",
+    "González",
+    "HSTS",
+    "IMSS",
+    "INFONAVIT",
+    "isort",
+    "kerbero",
+    "mypy",
+    "pgvector",
+    "Pydantic",
+    "pytest",
+    "Risograph",
+    "Résumé",
+    "Sindicalismo",
+    "SITIMM",
+    "sitimm",
+    "Sitimm",
+    "SITIMMFORMA",
+    "SitimmVito",
+    "verdad",
+    "Vite",
+    "Vitest",
+    "WCAG",
+    "worktrees",
+    "Zavala",
+    "Zustand"
+  ]
+}

@@ -1,0 +1,12 @@
+- banner:
+  - link "Eduardo González":
+    - /url: /
+  - navigation "Main":
+    - list:
+      - listitem:
+        - link "Work":
+          - /url: /#work
+      - listitem:
+        - link "Architecture":
+          - /url: /architecture/
+  - 'button "Style : New classic"'

@@ -42,3 +42,5 @@ jobs:
         run: npx --yes "$NETLIFY_CLI" deploy --prod --dir site --site "$NETLIFY_SITE_ID" --message "${{ github.sha }}"
       - name: Smoke test kerbero94.dev
         run: bash checks/smoke.sh
+      - name: Security headers grade A+ (Mozilla HTTP Observatory)
+        run: bash checks/observatory.sh

@@ -36,6 +36,16 @@ for (const path of PAGES) {
     const ids = [...document.querySelectorAll('[id]')].map((e) => e.id);
     assert.deepEqual(ids.filter((id, i) => ids.indexOf(id) !== i), [], 'ids are unique');
 
+    for (const pic of document.querySelectorAll('picture')) {
+      const types = [...pic.querySelectorAll('source')].map((x) => x.getAttribute('type'));
+      assert.deepEqual(types, ['image/avif', 'image/webp'], 'AVIF first, then WebP, then the img fallback');
+      for (const src of pic.querySelectorAll('source')) {
+        assert.ok(src.getAttribute('sizes'), 'every source has sizes');
+        const widths = src.getAttribute('srcset').split(',').map((c) => c.trim().split(/\s+/)[1]);
+        assert.equal(new Set(widths).size, widths.length, `no repeated width in ${src.getAttribute('srcset').slice(0, 40)}`);
+      }
+    }
+    assert.equal(document.querySelectorAll('main img').length, document.querySelectorAll('main picture img').length, 'every image is responsive');
     for (const img of document.querySelectorAll('img')) {
       assert.ok(img.hasAttribute('alt'), `alt on ${img.getAttribute('src')}`);
       assert.ok(img.getAttribute('width') && img.getAttribute('height'), `size on ${img.getAttribute('src')}`);
@@ -47,6 +57,8 @@ for (const path of PAGES) {
     const refs = [
       ...[...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')),
       ...[...document.querySelectorAll('[src^="/"], [poster^="/"]')].map((e) => e.getAttribute('src') || e.getAttribute('poster')),
+      ...[...document.querySelectorAll('[srcset]')].flatMap((e) => e.getAttribute('srcset').split(',').map((c) => c.trim().split(/\s+/)[0])),
+      ...[...document.querySelectorAll('link[rel=preload][href^="/"]')].map((l) => l.getAttribute('href')),
     ];
     const missing = refs.filter((r) => !r.startsWith('//') && !existsSync(fileFor(r)));
     assert.deepEqual(missing, []);

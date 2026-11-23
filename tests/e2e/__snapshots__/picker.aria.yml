@@ -1,0 +1,34 @@
+- dialog "Choose a style":
+  - heading "Choose a style" [level=2]
+  - paragraph: Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks and AAA color contrast.
+  - group "Default":
+    - text: ""
+    - 'radio "Match my system Light: New classic. Dark: Noir." [checked]'
+    - text: "Match my system Light: New classic. Dark: Noir."
+  - group "Quiet":
+    - text: ""
+    - radio "New classic A university-press book."
+    - text: New classic A university-press book.
+    - radio /Swiss A \d+-column poster grid\./
+    - text: /Swiss A \d+-column poster grid\./
+    - radio "Noir Dark, with one amber accent."
+    - text: Noir Dark, with one amber accent.
+    - radio "Art Deco Symmetry and gold."
+    - text: Art Deco Symmetry and gold.
+  - group "Bold":
+    - text: ""
+    - radio "Brutalism Raw HTML, system fonts."
+    - text: Brutalism Raw HTML, system fonts.
+    - radio "Bauhaus Primary colors and shapes."
+    - text: Bauhaus Primary colors and shapes.
+    - radio "Risograph A two-ink zine."
+    - text: Risograph A two-ink zine.
+  - group "Interface":
+    - text: ""
+    - radio "Terminal A VT100 manual."
+    - text: Terminal A VT100 manual.
+    - radio "Blueprint An architect's drawing."
+    - text: Blueprint An architect's drawing.
+    - radio /Retro OS A \d+[hmsp]+ desktop\./
+    - text: /Retro OS A \d+[hmsp]+ desktop\./
+  - paragraph: Did you know? Your device picked this one. I respect that.

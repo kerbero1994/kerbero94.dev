@@ -1,5 +1,7 @@
-# Production monitoring: a daily smoke test (pages, PDF, redirects, certificate) and a
-# weekly Lighthouse run against the real CDN. A failure emails the repo owner.
+# Production monitoring. Daily: smoke test (pages, PDF, redirects, certificate days),
+# security headers grade (A+), DNS hardening, and the static suite (it fails 30 days
+# before security.txt expires). Mondays: Lighthouse, mobile and desktop, against the
+# real CDN. A failure emails the repo owner.
 name: Monitor
 
 on:
@@ -17,26 +19,36 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
       - run: bash checks/smoke.sh
+      - run: bash checks/observatory.sh
+      - run: bash checks/dns.sh
+      - run: npm test
 
   lighthouse:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 14 * * 1'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        form: [mobile, desktop]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: |
-          npx lhci collect
+          npx lhci collect ${{ matrix.form == 'desktop' && '--settings.preset=desktop' || '' }}
           npx lhci upload
           npx lhci assert
         env:
           LHCI_ORIGIN: https://kerbero94.dev
       - if: always()
         run: |
-          { echo "### Lighthouse on kerbero94.dev, median of 3 runs, mobile"; node checks/lh-summary.mjs; } | tee -a "$GITHUB_STEP_SUMMARY"
+          { echo "### Lighthouse on kerbero94.dev, median of 3 runs, ${{ matrix.form }}"; node checks/lh-summary.mjs; } | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         if: always()
-        with: { name: lighthouse-production, path: .lighthouseci, include-hidden-files: true }
+        with: { name: "lighthouse-production-${{ matrix.form }}", path: .lighthouseci, include-hidden-files: true }
