@@ -55,9 +55,9 @@ The browser suites run in CI so the shared Mac isn't loaded; run them locally on
 ## CI/CD
 
 1. Branch, then open a pull request against `main`.
-2. **PR** (`pr.yml`): the gate, then a Netlify preview linked on the pull request. Previews cost no Netlify credits. The Lighthouse tables are in the run summary.
+2. **PR** (`pr.yml`): the gate, then a Netlify preview recorded as a GitHub deployment ("View deployment" on the PR). Previews cost no Netlify credits. A bot keeps one **quality report** comment on the PR, updated on every push: each layer's result with its numbers (unit tests passed, e2e per engine with flaky and skipped, screens matching, axe AA and AAA, Lighthouse per page on mobile and desktop) and the preview link.
 3. Merge when the gate is green and the preview looks right.
-4. **Deploy** (`deploy.yml`): runs on `main` only when `site/` or `netlify.toml` changed. It runs the gate again on exactly what ships, deploys to production, smoke-tests kerbero94.dev and requires an A+ from Mozilla's HTTP Observatory.
+4. **Deploy** (`deploy.yml`): runs on `main` only when `site/` or `netlify.toml` changed. It runs the gate again on exactly what ships, deploys to the `production` environment (only protected branches may deploy there), smoke-tests kerbero94.dev, requires an A+ from Mozilla's HTTP Observatory, and comments the outcome on the merged pull request, with rollback steps if it failed.
 5. **Monitor** (`monitor.yml`): every day at 08:00 Mexico City, the smoke test (pages, PDF, fonts, `security.txt`, redirects, certificate days left), the Observatory grade, DNS hardening (CAA, DNSSEC, DMARC, SPF) and the static suite. Every Monday, Lighthouse against production, mobile and desktop. A failure emails the owner.
 
 **Visual baselines:** label a pull request `update-visuals`. CI renders the screens, commits them to the branch and removes the label. Review the images in the diff like any other change.
@@ -65,6 +65,8 @@ The browser suites run in CI so the shared Mac isn't loaded; run them locally on
 **Netlify credits:** each production deploy costs 15 of the 300 monthly credits on the free plan, and the site pauses when they run out. Batch changes into fewer merges; dependency updates (outside `site/`) merge without deploying.
 
 **Rollback:** Netlify > Deploys > the previous production deploy > Publish deploy. It costs no credits.
+
+**Branch protection:** `main` takes pull requests only, with the nine `gate / …` jobs as required checks (up to date with `main`, admins included, no force-push). Renaming a gate job means updating the protection.
 
 **Secrets:** `NETLIFY_AUTH_TOKEN` (a Netlify personal access token) in the repo's Actions secrets. The site ID is not secret and lives in the workflows.
 

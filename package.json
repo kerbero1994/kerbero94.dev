@@ -4,7 +4,7 @@
   "scripts": {
     "serve": "http-server site -p 8791 -a 127.0.0.1 -c-1 --silent",
     "test": "npm run test:static",
-    "test:static": "html-validate \"site/**/*.html\" && node --test \"tests/unit/*.test.mjs\" && node checks/spell.mjs",
+    "test:static": "bash checks/run-static.sh",
     "test:a11y": "node checks/scan.cjs http://127.0.0.1:8791 checks/result.json",
     "test:e2e": "playwright test --project=chrome --project=firefox --project=webkit-iphone",
     "test:visual": "playwright test --project=visual",

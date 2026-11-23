@@ -12,7 +12,8 @@ export default defineConfig({
   forbidOnly: CI,
   retries: CI ? 1 : 0, // a pass on retry is reported as flaky, not hidden
   workers: CI ? 2 : 1,
-  reporter: CI ? [['github'], ['html', { open: 'never' }]] : 'list',
+  // CI also writes JSON for the PR report; PW_JSON names the file per job.
+  reporter: CI ? [['github'], ['html', { open: 'never' }], ['json', { outputFile: process.env.PW_JSON || 'results/playwright.json' }]] : 'list',
   use: { baseURL: 'http://127.0.0.1:8791', reducedMotion: 'reduce', trace: 'retain-on-failure' },
   webServer: { command: 'npm run serve', url: 'http://127.0.0.1:8791/', reuseExistingServer: !CI },
   // Visual baselines are Linux renders made in CI (see README); no platform suffix on purpose.

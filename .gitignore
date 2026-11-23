@@ -5,4 +5,5 @@ checks/result.json
 cv/*.pdf
 node_modules/
 playwright-report/
+results/
 test-results/

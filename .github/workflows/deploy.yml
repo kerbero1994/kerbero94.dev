@@ -1,5 +1,7 @@
 # Production: a merge to main that changes the published site runs the same gate as
-# pull requests, on exactly what ships, then deploys and smoke-tests kerbero94.dev.
+# pull requests, on exactly what ships, then deploys to the "production" environment
+# (main only), smoke-tests kerbero94.dev, requires an Observatory A+, and reports back
+# on the merged pull request.
 # Each production deploy costs 15 of the 300 monthly Netlify credits and the site
 # pauses when they run out, so dependency updates (outside site/) don't deploy.
 # Rollback: Netlify > Deploys > the previous one > Publish deploy (no credits).
@@ -32,15 +34,51 @@ jobs:
     needs: gate
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+    environment:
+      name: production
+      url: https://kerbero94.dev
+    defaults:
+      run:
+        shell: bash # -eo pipefail, so "| tee" can't hide a failure
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with: { node-version: 22 }
       - name: Deploy to production
+        id: deploy
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: npx --yes "$NETLIFY_CLI" deploy --prod --dir site --site "$NETLIFY_SITE_ID" --message "${{ github.sha }}"
+        run: |
+          npx --yes "$NETLIFY_CLI" deploy --prod --dir site --site "$NETLIFY_SITE_ID" --message "${{ github.sha }}" --json > deploy.json
+          echo "id=$(node -p 'require("./deploy.json").deploy_id')" >> "$GITHUB_OUTPUT"
       - name: Smoke test kerbero94.dev
-        run: bash checks/smoke.sh
+        run: bash checks/smoke.sh | tee smoke.txt
       - name: Security headers grade A+ (Mozilla HTTP Observatory)
-        run: bash checks/observatory.sh
+        run: bash checks/observatory.sh | tee observatory.txt
+      - name: Report on the merged pull request
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ job.status }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          prs=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" -q '.[].number')
+          [ -z "$prs" ] && { echo "No pull request for ${{ github.sha }}"; exit 0; }
+          if [ "$OUTCOME" = success ]; then
+            body="🚀 **Deployed to production** · https://kerbero94.dev · \`${GITHUB_SHA::7}\`
+
+          - Smoke test: $(grep -c '^ok' smoke.txt) checks passed ($(grep -o 'certificate: [0-9]* days left' smoke.txt))
+          - $(head -1 observatory.txt)
+          - Netlify deploy \`${{ steps.deploy.outputs.id }}\`
+
+          <sub>[Run]($RUN) · rollback: Netlify › Deploys › previous deploy › Publish deploy (no credits)</sub>"
+          else
+            body="❌ **Production deploy failed** at \`${GITHUB_SHA::7}\`. [Run]($RUN)
+
+          If the Netlify step failed, production still serves the previous deploy. If a check after it failed, the new deploy is live: roll back in Netlify › Deploys › previous deploy › Publish deploy (no credits)."
+          fi
+          for pr in $prs; do gh pr comment "$pr" -R "${{ github.repository }}" --body "$body"; done
