@@ -1,0 +1,4 @@
+#!/bin/sh
+# Fast local gate: HTML validity and unit tests, a few seconds, no browser.
+# The browser suites (axe, e2e, visual, Lighthouse) run in CI, not on the shared Mac.
+npm run --silent test:static

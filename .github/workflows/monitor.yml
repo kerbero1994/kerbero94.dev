@@ -1,0 +1,43 @@
+# Production monitoring: a daily smoke test (pages, PDF, redirects, certificate) and a
+# weekly Lighthouse run against the real CDN. A failure emails the repo owner.
+name: Monitor
+
+on:
+  schedule:
+    - cron: "0 14 * * *"  # daily, 08:00 in Mexico City
+    - cron: "30 14 * * 1" # Mondays: Lighthouse too
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash checks/smoke.sh
+
+  lighthouse:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 14 * * 1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: |
+          npx lhci collect
+          npx lhci upload
+          npx lhci assert
+        env:
+          LHCI_ORIGIN: https://kerbero94.dev
+      - if: always()
+        run: |
+          echo "### Lighthouse on kerbero94.dev, median of 3 runs, mobile" >> "$GITHUB_STEP_SUMMARY"
+          node checks/lh-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with: { name: lighthouse-production, path: .lighthouseci }

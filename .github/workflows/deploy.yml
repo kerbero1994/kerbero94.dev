@@ -1,10 +1,8 @@
-# CD: a merge to main that changes the published site deploys to production.
-# Each production deploy costs 15 of the 300 monthly Netlify credits, and the
-# site pauses when they run out, so:
-#   - only changes under site/ or to netlify.toml deploy (dependency updates don't);
-#   - the check runs again on exactly what ships before the deploy;
-#   - one deploy at a time, never cancelled midway.
-# Rollback: Netlify UI > Deploys > pick the previous one > Publish deploy. It costs no credits.
+# Production: a merge to main that changes the published site runs the same gate as
+# pull requests, on exactly what ships, then deploys and smoke-tests kerbero94.dev.
+# Each production deploy costs 15 of the 300 monthly Netlify credits and the site
+# pauses when they run out, so dependency updates (outside site/) don't deploy.
+# Rollback: Netlify > Deploys > the previous one > Publish deploy (no credits).
 name: Deploy
 
 on:
@@ -27,26 +25,20 @@ env:
   NETLIFY_CLI: netlify-cli@27.20.1
 
 jobs:
+  gate:
+    uses: ./.github/workflows/gate.yml
+
   deploy:
+    needs: gate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Serve the site
-        run: python3 -m http.server 8791 --bind 127.0.0.1 --directory site &
-      - name: Check what ships
-        run: npm run check
+        with: { node-version: 22 }
       - name: Deploy to production
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: npx --yes "$NETLIFY_CLI" deploy --prod --dir site --site "$NETLIFY_SITE_ID" --message "${{ github.sha }}"
       - name: Smoke test kerbero94.dev
-        run: |
-          for p in / /sitimm/ /accessibility/ /sitimmvito/ /architecture/ /eduardo-gonzalez-cv.pdf /og.png; do
-            curl -fsS -o /dev/null -w "%{http_code} $p\n" "https://kerbero94.dev$p"
-          done
+        run: bash checks/smoke.sh

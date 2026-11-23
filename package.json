@@ -2,11 +2,25 @@
   "name": "kerbero94.dev",
   "private": true,
   "scripts": {
-    "serve": "python3 -m http.server 8791 --bind 127.0.0.1 --directory site",
-    "check": "node checks/scan.cjs http://127.0.0.1:8791 checks/result.json"
+    "serve": "http-server site -p 8791 -a 127.0.0.1 -c-1 --silent",
+    "test": "npm run test:static",
+    "test:static": "html-validate \"site/**/*.html\" && node --test \"tests/unit/*.test.mjs\"",
+    "test:a11y": "node checks/scan.cjs http://127.0.0.1:8791 checks/result.json",
+    "test:e2e": "playwright test --project=chrome --project=firefox --project=webkit-iphone",
+    "test:visual": "playwright test --project=visual",
+    "test:perf": "lhci autorun",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {
+    "@lhci/cli": "0.16.1",
+    "@playwright/test": "1.65.1",
     "axe-core": "4.14.1",
+    "html-validate": "11.21.1",
+    "http-server": "14.1.1",
+    "linkedom": "0.18.15",
     "playwright-core": "1.65.1"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
