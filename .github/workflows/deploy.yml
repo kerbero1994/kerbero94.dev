@@ -1,0 +1,52 @@
+# CD: a merge to main that changes the published site deploys to production.
+# Each production deploy costs 15 of the 300 monthly Netlify credits, and the
+# site pauses when they run out, so:
+#   - only changes under site/ or to netlify.toml deploy (dependency updates don't);
+#   - the check runs again on exactly what ships before the deploy;
+#   - one deploy at a time, never cancelled midway.
+# Rollback: Netlify UI > Deploys > pick the previous one > Publish deploy. It costs no credits.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "netlify.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  NETLIFY_SITE_ID: c35e5d83-d442-4541-adae-b92cea9da71b
+  NETLIFY_CLI: netlify-cli@27.20.1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Serve the site
+        run: python3 -m http.server 8791 --bind 127.0.0.1 --directory site &
+      - name: Check what ships
+        run: npm run check
+      - name: Deploy to production
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: npx --yes "$NETLIFY_CLI" deploy --prod --dir site --site "$NETLIFY_SITE_ID" --message "${{ github.sha }}"
+      - name: Smoke test kerbero94.dev
+        run: |
+          for p in / /sitimm/ /accessibility/ /sitimmvito/ /architecture/ /eduardo-gonzalez-cv.pdf /og.png; do
+            curl -fsS -o /dev/null -w "%{http_code} $p\n" "https://kerbero94.dev$p"
+          done

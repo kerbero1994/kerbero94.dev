@@ -1,0 +1,18 @@
+# Monthly and grouped: one pull request per ecosystem. These only touch the
+# check, not site/, so merging them never triggers a production deploy.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      check-tools:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

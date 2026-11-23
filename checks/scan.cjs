@@ -1,6 +1,6 @@
 // axe 4.14 on 4 pages x 10 styles (+ the open style picker), broken requests, console errors,
-// horizontal overflow at 390 px, and the social preview image.
-// Usage: node scan.cjs <origin> <out.json> [og.png]
+// horizontal overflow at 390 px, internal links, and the social preview image.
+// Usage: node scan.cjs <origin> <out.json> [og.png]. Exits 1 on any finding, so CI can gate on it.
 const { chromium } = require('playwright-core');
 const fs = require('fs');
 const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
@@ -19,7 +19,8 @@ const axe = (page, include) => page.evaluate(async ([src, tags, inc]) => {
 
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome' });
-  const out = { axe: [], broken: new Set(), console: [], overflow: [] };
+  const out = { axe: [], broken: new Set(), console: [], overflow: [], links: [] };
+  const hrefs = new Set();
   for (const [w, h] of [[1280, 800], [390, 844]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: 'reduce' });
     for (const style of STYLES) for (const path of PAGES) {
@@ -30,6 +31,7 @@ const axe = (page, include) => page.evaluate(async ([src, tags, inc]) => {
       await page.goto(`${ORIGIN}${path}?style=${style}`, { waitUntil: 'networkidle' });
       await page.evaluate(() => document.fonts.ready);
       if (w === 1280) {
+        if (style === STYLES[0]) for (const h of await page.$$eval('a[href^="/"]', (as) => as.map((a) => a.getAttribute('href').split('#')[0]))) hrefs.add(h);
         const v = await axe(page);
         out.axe.push({ style, path, v });
         if (path === '/') {
@@ -45,6 +47,12 @@ const axe = (page, include) => page.evaluate(async ([src, tags, inc]) => {
     }
     await ctx.close();
   }
+  const linkCtx = await browser.newContext();
+  for (const h of hrefs) {
+    const r = await linkCtx.request.get(`${ORIGIN}${h}`);
+    if (r.status() >= 400) out.links.push(`${r.status()} ${h}`);
+  }
+  await linkCtx.close();
   if (OG) {
     const ctx = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
     const page = await ctx.newPage();
@@ -61,5 +69,6 @@ const axe = (page, include) => page.evaluate(async ([src, tags, inc]) => {
   console.log('broken', out.broken.length, out.broken.slice(0, 10));
   console.log('console errors', out.console.length, out.console.slice(0, 10));
   console.log('overflow at 390px', JSON.stringify(out.overflow));
-  process.exit(0);
+  console.log('internal links', hrefs.size, 'broken', JSON.stringify(out.links));
+  process.exit(bad.length || out.broken.length || out.console.length || out.overflow.length || out.links.length ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });
