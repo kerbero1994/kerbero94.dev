@@ -14,8 +14,8 @@ One semantic HTML document per page, ten visual styles chosen from the **Style**
 | `tests/e2e/` | Playwright: what a visitor does, in Chrome, Firefox and WebKit on an iPhone; ARIA snapshots in `__snapshots__` |
 | `tests/visual/` | Visual regression: 57 screens, baselines in `__snapshots__` |
 | `checks/` | The axe scan, spell check, Lighthouse summary, production smoke test, Observatory grade, DNS check |
-| `scripts/` | `csp.mjs` (regenerates the CSP hashes), `images.sh` (responsive image variants) |
-| `.github/workflows/` | `gate.yml` (the checks), `pr.yml`, `deploy.yml`, `monitor.yml` |
+| `scripts/` | `csp.mjs` (regenerates the CSP hashes), `images.sh` (responsive image variants), `cv.sh` (prints the résumé PDF), `rollback.sh` |
+| `.github/workflows/` | `gate.yml` (the checks), `pr.yml`, `deploy.yml`, `rollback.yml`, `monitor.yml`, `uptime.yml`, `dependabot-automerge.yml` |
 
 ## The gate
 
@@ -27,6 +27,7 @@ Every pull request and every production deploy runs the same gate (`gate.yml`):
 | Static | Valid HTML; every page has its title, description, canonical, Open Graph, structured data, one `h1`, a skip link; every link, asset, `srcset` entry and preload exists; every image is responsive (AVIF, WebP, fallback); the sitemap lists every page | html-validate, `node:test` |
 | Unit | The no-flash style script: URL beats saved beats system, unknown values ignored, blocked storage survives | `node:test` + `vm` |
 | Drift | The header, style picker, footer and scripts copied into each page stay identical | `node:test` + linkedom |
+| Résumé | The PDF has the same text as `cv/cv.html`, is tagged with its language, and the button states its real size | `node:test` + pdf.js |
 | Security | The CSP allows exactly the inline scripts and styles on the pages, with no `unsafe-inline`; every security header is set; `security.txt` is valid and not about to expire | `node:test` |
 | Design rules | No coloured stripe on a side edge, ever | `node:test` on the CSS |
 | Content | No spelling mistakes in anything a visitor reads or hears (text, alt, labels) | cspell |
@@ -58,7 +59,12 @@ The browser suites run in CI so the shared Mac isn't loaded; run them locally on
 2. **PR** (`pr.yml`): the gate, then a Netlify preview recorded as a GitHub deployment ("View deployment" on the PR). Previews cost no Netlify credits. A bot keeps one **quality report** comment on the PR, updated on every push: each layer's result with its numbers (unit tests passed, e2e per engine with flaky and skipped, screens matching, axe AA and AAA, Lighthouse per page on mobile and desktop) and the preview link.
 3. Merge when the gate is green and the preview looks right.
 4. **Deploy** (`deploy.yml`): runs on `main` only when `site/` or `netlify.toml` changed. It runs the gate again on exactly what ships, deploys to the `production` environment (only protected branches may deploy there), smoke-tests kerbero94.dev, requires an A+ from Mozilla's HTTP Observatory, and comments the outcome on the merged pull request, with rollback steps if it failed.
-5. **Monitor** (`monitor.yml`): every day at 08:00 Mexico City, the smoke test (pages, PDF, fonts, `security.txt`, redirects, certificate days left), the Observatory grade, DNS hardening (CAA, DNSSEC, DMARC, SPF) and the static suite. Every Monday, Lighthouse against production, mobile and desktop. A failure emails the owner.
+5. **Release:** every successful deploy tags `vYYYY.MM.DD` (`.2`, `.3` on busy days) with notes generated from the merged pull requests. The Releases page is the changelog.
+6. **Rollback** (`rollback.yml`, run by hand): restores the previous production deploy on Netlify, or a chosen `deploy_id`. No build and no credits. `dry_run` shows the choice without touching production. Then revert the faulty pull request, or the next deploy brings it back.
+7. **Uptime** (`uptime.yml`): every 5 minutes, best-effort. Two failed probes a minute apart open an `incident` issue, which notifies the owner; the first success closes it with the downtime.
+8. **Monitor** (`monitor.yml`): every day at 08:00 Mexico City, the smoke test (pages, PDF, fonts, `security.txt`, redirects, certificate days left), the Observatory grade, DNS hardening (CAA, DNSSEC, DMARC, SPF), the Netlify token, this billing period's production deploys (warns at 10, fails at 16 of the 20 the credits allow) and the static suite. Every Monday, Lighthouse against production, mobile and desktop. A failure emails the owner.
+
+**Dependencies:** Dependabot opens one grouped pull request a month per ecosystem. Patch and minor updates merge themselves once the required checks pass; majors wait for a person. They never touch `site/`, so they never deploy.
 
 **Visual baselines:** label a pull request `update-visuals`. CI renders the screens, commits them to the branch and removes the label. Review the images in the diff like any other change.
 
@@ -69,5 +75,7 @@ The browser suites run in CI so the shared Mac isn't loaded; run them locally on
 **Branch protection:** `main` takes pull requests only, with the nine `gate / …` jobs as required checks (up to date with `main`, admins included, no force-push). Renaming a gate job means updating the protection.
 
 **Secrets:** `NETLIFY_AUTH_TOKEN` (a Netlify personal access token) in the repo's Actions secrets. The site ID is not secret and lives in the workflows.
+
+**License:** the code is MIT (`LICENSE`). The site's content (text, images, video, résumé) is © Eduardo González, all rights reserved. Fonts are under the SIL OFL (`site/fonts/README.txt`). Security reports: `SECURITY.md`.
 
 **Caching:** fonts are cached for a year (`immutable`), images and video for 30 days. Give a changed image or font a new file name.

@@ -1,0 +1,55 @@
+# Uptime: every 5 minutes (GitHub runs schedules best-effort, so sometimes later).
+# Two failed checks a minute apart open an "incident" issue, which notifies the owner;
+# further failures comment on it, and the first success closes it with the downtime.
+name: Uptime
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe kerbero94.dev
+        id: probe
+        run: |
+          probe() {
+            for p in / /architecture/ /eduardo-gonzalez-cv.pdf; do
+              code=$(curl -s -o /dev/null -m 15 -w '%{http_code}' "https://kerbero94.dev$p") || code=000
+              [ "$code" = 200 ] || { echo "$p answered $code"; return 1; }
+            done
+          }
+          if out=$(probe) || { sleep 60; out=$(probe); }; then echo "up=true" >> "$GITHUB_OUTPUT"; echo "up"
+          else echo "up=false" >> "$GITHUB_OUTPUT"; echo "reason=$out" >> "$GITHUB_OUTPUT"; echo "down: $out"; fi
+      - name: Open, update or close the incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UP: ${{ steps.probe.outputs.up }}
+          REASON: ${{ steps.probe.outputs.reason }}
+        run: |
+          open=$(gh issue list -R "$GITHUB_REPOSITORY" --label incident --state open --json number,createdAt -q '.[0] // {}')
+          num=$(jq -r '.number // empty' <<<"$open"); since=$(jq -r '.createdAt // empty' <<<"$open")
+          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          if [ "$UP" = true ]; then
+            [ -z "$num" ] && exit 0
+            mins=$(( ( $(date -u +%s) - $(date -u -d "$since" +%s) ) / 60 ))
+            gh issue close "$num" -R "$GITHUB_REPOSITORY" --comment "🟢 Back up at $now, after about $mins minutes."
+          elif [ -z "$num" ]; then
+            gh issue create -R "$GITHUB_REPOSITORY" --label incident --title "🔴 kerbero94.dev is down" \
+              --body "Detected at $now by the uptime check: $REASON. This issue closes itself when the site answers again. Rollback: Actions › Rollback."
+            exit 1
+          else
+            gh issue comment "$num" -R "$GITHUB_REPOSITORY" --body "Still down at $now: $REASON"
+            exit 1
+          fi

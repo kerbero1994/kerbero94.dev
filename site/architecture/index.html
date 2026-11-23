@@ -832,7 +832,7 @@ html,body{margin:0}
         </section>
         <h3 class="sub">One thing it caught</h3>
         <p>Lighthouse measured a layout shift of 0.22 on every page. At 412 px wide, a common Android width, the header fit one more item on its first row with the fallback font than with Bodoni, which is 14 px wider. So it re-wrapped when the font arrived and pushed the page down 22 px. Pinning the header layout on narrow screens brought the shift under 0.05 and performance from 88 to 99, and the budget that found it now blocks any change that brings it back.</p>
-        <p class="note">Production is watched too: a daily smoke test and security-header grade, and Lighthouse against the live site every week.</p>
+        <p class="note">Every deploy is a tagged release, and rolling back is one workflow that restores the previous deploy. Production is watched too: an uptime check every few minutes that opens an incident issue on its own, a daily smoke test and security-header grade, and Lighthouse against the live site every week.</p>
       </section>
 
       <section class="contact" aria-labelledby="h-contact">

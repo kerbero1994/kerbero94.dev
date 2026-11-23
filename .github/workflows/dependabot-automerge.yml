@@ -1,0 +1,23 @@
+# Dependabot: patch and minor updates of the dev tools merge themselves once the
+# required checks pass (auto-merge waits for them). Majors wait for a person.
+# These updates never touch site/, so they never deploy.
+name: Dependabot auto-merge
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: dependabot/fetch-metadata@v3
+        id: meta
+      - if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge --auto --merge "${{ github.event.pull_request.html_url }}"
