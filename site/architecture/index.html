@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" id="theme-color" content="#FBF9F9">
 <title>Architecture and delivery: Eduardo González</title>
-<meta name="description" content="System design of a union's platform run by one engineer: the architecture, the contract between five repos, CI/CD without a CI budget, and the trade-offs behind each decision.">
+<meta name="description" content="How one engineer built a union's platform: the architecture, the contract between five repos, CI/CD without a CI budget, and each trade-off.">
 <link rel="canonical" href="https://kerbero94.dev/architecture/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Eduardo González">
 <meta property="og:title" content="Architecture and delivery: Eduardo González">
-<meta property="og:description" content="System design of a union's platform run by one engineer: the architecture, the contract between five repos, CI/CD without a CI budget, and the trade-offs behind each decision.">
+<meta property="og:description" content="How one engineer built a union's platform: the architecture, the contract between five repos, CI/CD without a CI budget, and each trade-off.">
 <meta property="og:url" content="https://kerbero94.dev/architecture/">
 <meta property="og:image" content="https://kerbero94.dev/og.png">
 <meta property="og:image:width" content="1200">
@@ -489,6 +489,7 @@ html,body{margin:0}
 .doc .plain a,.doc>p a{text-decoration:underline;text-underline-offset:.2em}
 @media (max-width:760px){.arch>li,.split-3{grid-template-columns:1fr}}
 </style>
+<noscript><style>.style-btn{display:none!important}</style></noscript>
 </head>
 <body>
 
@@ -510,7 +511,7 @@ html,body{margin:0}
       </div>
     </header>
 
-    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+    <div id="style-picker" class="picker" popover role="dialog" aria-labelledby="picker-h">
       <h2 id="picker-h">Choose a style</h2>
       <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks.</p>
       <fieldset>
@@ -545,7 +546,6 @@ html,body{margin:0}
         </div>
       </fieldset>
     </div>
-    <noscript><style>.style-btn{display:none!important}</style></noscript>
 
     <main id="main">
       <section class="hero" aria-labelledby="h-hero">
@@ -695,7 +695,7 @@ html,body{margin:0}
           <li><b>The runner fights production</b><span>The API's runner lived on the production VPS, with 2 vCPUs. One CI run sat queued for 14 h 44 min.</span></li>
           <li><b>Decision</b><span>28 Sep 2026: Actions off in all five repos. Every check moves to the pre-push hook. One workflow stays: the API deploy, which spends no minutes.</span></li>
         </ol>
-        <div class="table-wrap" role="region" aria-labelledby="h-volume" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-volume" tabindex="0">
           <table class="data data-tight">
             <caption id="h-volume">Merged pull requests and GitHub Actions runs per month, all five repos</caption>
             <thead><tr><th scope="col">Month, 2026</th><th scope="col" class="num">Merged pull requests</th><th scope="col" class="num">Actions runs</th><th scope="col">What ran</th></tr></thead>
@@ -708,14 +708,14 @@ html,body{margin:0}
               <tr><th scope="row">November, to the 23rd</th><td class="num">445</td><td class="num">118</td><td>Same</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
         <p class="note">Counted from the GitHub API on 23 Nov 2026. A run that was refused for budget still counts as a run.</p>
 
         <h3 class="sub">The incident that shaped the deploy</h3>
         <p>That 14-hour queue finished on 29 Jul 2026. The deploy workflow fired three seconds later and built a commit five behind main, then tried to put it on production. A database migration refused it, by luck rather than design. Since then, a guard compares the commit against the real head of main and skips any deploy that's been overtaken. Skipped, not failed: a red mark for a correct outcome teaches people to ignore red marks.</p>
 
         <h3 class="sub">What runs before every push</h3>
-        <div class="table-wrap" role="region" aria-labelledby="h-gates" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-gates" tabindex="0">
           <table class="data">
             <caption id="h-gates" class="vh">The local checks each repository runs before a push</caption>
             <thead><tr><th scope="col">Repo</th><th scope="col">Checks</th></tr></thead>
@@ -726,7 +726,7 @@ html,body{margin:0}
               <tr><th scope="row">App</th><td>Module boundaries, dependency and audit checks, coverage of changed lines, docs, and the v2 contract invariants.</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
 
         <h3 class="sub">How each surface deploys</h3>
         <ul class="plain">
@@ -736,7 +736,7 @@ html,body{margin:0}
         </ul>
 
         <h3 class="sub">What I gave up, and what covers it</h3>
-        <div class="table-wrap" role="region" aria-labelledby="h-tradeoffs" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-tradeoffs" tabindex="0">
           <table class="data">
             <caption id="h-tradeoffs" class="vh">Trade-offs of moving CI to the laptop</caption>
             <thead><tr><th scope="col">Given up</th><th scope="col">Why it's acceptable here</th><th scope="col">What covers it</th></tr></thead>
@@ -747,16 +747,16 @@ html,body{margin:0}
               <tr><th scope="row">Required status checks on main</th><td>Private repos on a free plan can't enforce them anyway.</td><td>Only I merge, after the local gate and a second model's review.</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
         <p>When a second engineer joins, or the budget comes back, CI returns first for the API, the riskiest repo. It would run the same command as the laptop, so the two can't drift.</p>
       </section>
 
       <section class="doc" aria-labelledby="h-decisions">
         <h2 id="h-decisions">How I make decisions</h2>
         <p>Each decision gets the same five questions: what forced it, what else I considered, what I chose, what it costs, and what would make me change it.</p>
-        <div class="table-wrap" role="region" aria-labelledby="h-decisions" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-decisions-table" tabindex="0">
           <table class="data">
-            <caption class="vh">Architecture decisions, the alternatives, their cost and when to revisit them</caption>
+            <caption id="h-decisions-table" class="vh">Architecture decisions, the alternatives, their cost and when to revisit them</caption>
             <thead><tr><th scope="col">Decision</th><th scope="col">Instead of</th><th scope="col">What it costs</th><th scope="col">I'd revisit when</th></tr></thead>
             <tbody>
               <tr><th scope="row">Checks before push, Actions off</th><td>Paying for more minutes, or cutting checks</td><td>One machine is the build farm</td><td>A second engineer or a CI budget</td></tr>
@@ -768,7 +768,7 @@ html,body{margin:0}
               <tr><th scope="row">Socket receives, HTTP writes</th><td>Writes over the socket</td><td>A second connection for live chat</td><td>HTTP round-trips become the chat bottleneck</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </section>
 
       <section class="doc" aria-labelledby="h-value">
@@ -839,7 +839,7 @@ html,body{margin:0}
 </script>
 <script>
 document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',async()=>{
-  const v=b.closest('figure').querySelector('video');
+  const v=document.querySelector('.tour video');
   v.currentTime=+b.dataset.seek;v.play();
 }));
 </script>

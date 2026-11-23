@@ -470,6 +470,7 @@ html,body{margin:0}
   .site *::before,.site *::after{content:none!important}
 }
 </style>
+<noscript><style>.style-btn{display:none!important}</style></noscript>
 </head>
 <body>
 
@@ -491,7 +492,7 @@ html,body{margin:0}
       </div>
     </header>
 
-    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+    <div id="style-picker" class="picker" popover role="dialog" aria-labelledby="picker-h">
       <h2 id="picker-h">Choose a style</h2>
       <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks.</p>
       <fieldset>
@@ -526,7 +527,6 @@ html,body{margin:0}
         </div>
       </fieldset>
     </div>
-    <noscript><style>.style-btn{display:none!important}</style></noscript>
 
     <main id="main">
       <section class="hero" aria-labelledby="h-hero">
@@ -556,9 +556,9 @@ html,body{margin:0}
 
       <section class="doc" aria-labelledby="h-fixes">
         <h2 id="h-fixes">Before and after</h2>
-        <div class="table-wrap" role="region" aria-labelledby="h-fixes" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-fixes-table" tabindex="0">
           <table class="data data-tight">
-            <caption class="vh">Accessibility failures on sitimm.org, the WCAG criterion, and the state before and after the fix</caption>
+            <caption id="h-fixes-table" class="vh">Accessibility failures on sitimm.org, the WCAG criterion, and the state before and after the fix</caption>
             <thead><tr><th scope="col">What failed</th><th scope="col">WCAG</th><th scope="col">Before</th><th scope="col">After</th></tr></thead>
             <tbody>
               <tr><th scope="row">A dialog named “Close”</th><td>4.1.2 Name, Role, Value</td><td>While a magazine loaded, the dialog's only name was its close button's label. A screen reader announced the whole dialog as “Close”.</td><td>It has a real name from the first frame. The shared modal now requires a title in its types, so a dialog with no name doesn't compile.</td></tr>
@@ -572,7 +572,7 @@ html,body{margin:0}
               <tr><th scope="row">Reduced motion meant no cue</th><td>2.3.3 Animation from Interactions (AAA)</td><td>With reduced motion on, the hero text switched language with no transition at all.</td><td>A fade with no movement. Less motion, and still a cue that something changed.</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </section>
 
       <section class="doc" aria-labelledby="h-keep">
@@ -589,9 +589,9 @@ html,body{margin:0}
       <section class="doc" aria-labelledby="h-today">
         <h2 id="h-today">Then I scanned production</h2>
         <p>For this page I scanned production myself, on 20 and 21 November 2026: 27 public pages, in light and dark mode, with axe-core and the WCAG 2.0 to 2.2 rules, levels A and AA. I expected a clean report. I didn't get one.</p>
-        <div class="table-wrap" role="region" aria-labelledby="h-today" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-today-table" tabindex="0">
           <table class="data data-tight">
-            <caption class="vh">What the scan of sitimm.org found on 20 and 21 November 2026</caption>
+            <caption id="h-today-table" class="vh">What the scan of sitimm.org found on 20 and 21 November 2026</caption>
             <thead><tr><th scope="col">What the scan found</th><th scope="col">Where</th><th scope="col">Measured</th></tr></thead>
             <tbody>
               <tr><th scope="row">The brand red used as a text colour on dark surfaces</th><td>The cookie banner on every page, the 404 links, program and collection pages</td><td>3.2 to 3.8:1. AA asks for 4.5:1.</td></tr>
@@ -604,7 +604,7 @@ html,body{margin:0}
               <tr><th scope="row">Headings</th><td>The home page and four others</td><td>Two top-level headings on the home page. A skipped level on four pages.</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
         <p><b>Why nothing caught it.</b> The list above describes the test as the pull request leaves it. The day I scanned, it only ran in light mode, on four flows, and only in CI. CI had been off since September. When I ran it by hand it could not even start: the browser it needed was not installed. Had it started, it would have failed on a rule that a dependency update had added. The check was easy to break, and it had broken without a sound.</p>
         <p><b>What I changed.</b> One pull request, the next day. It is in review: sitimm.org gets these fixes when it merges.</p>
         <ul class="plain">
@@ -678,7 +678,7 @@ html,body{margin:0}
 </script>
 <script>
 document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',async()=>{
-  const v=b.closest('figure').querySelector('video');
+  const v=document.querySelector('.tour video');
   v.currentTime=+b.dataset.seek;v.play();
 }));
 </script>

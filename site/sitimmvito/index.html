@@ -470,6 +470,7 @@ html,body{margin:0}
   .site *::before,.site *::after{content:none!important}
 }
 </style>
+<noscript><style>.style-btn{display:none!important}</style></noscript>
 </head>
 <body>
 
@@ -491,7 +492,7 @@ html,body{margin:0}
       </div>
     </header>
 
-    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+    <div id="style-picker" class="picker" popover role="dialog" aria-labelledby="picker-h">
       <h2 id="picker-h">Choose a style</h2>
       <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks.</p>
       <fieldset>
@@ -526,7 +527,6 @@ html,body{margin:0}
         </div>
       </fieldset>
     </div>
-    <noscript><style>.style-btn{display:none!important}</style></noscript>
 
     <main id="main">
       <section class="hero" aria-labelledby="h-hero">
@@ -570,9 +570,9 @@ html,body{margin:0}
 
       <section class="doc" aria-labelledby="h-wrong">
         <h2 id="h-wrong">Five ways it was wrong</h2>
-        <div class="table-wrap" role="region" aria-labelledby="h-wrong" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-wrong-table" tabindex="0">
           <table class="data">
-            <caption class="vh">Search failures, the cause of each one and the fix</caption>
+            <caption id="h-wrong-table" class="vh">Search failures, the cause of each one and the fix</caption>
             <thead><tr><th scope="col">What I saw</th><th scope="col">Why</th><th scope="col">The fix</th></tr></thead>
             <tbody>
               <tr><th scope="row">Common words beat the right answer</th><td>Asked about the Christmas bonus, magazine pages full of “days” and “December” outranked the labour-law article that answers it. Postgres's ranking has no idea which words are rare.</td><td>Each matching word scores by how rare it is in the index. The built-in rank only breaks ties.</td></tr>
@@ -582,14 +582,14 @@ html,body{margin:0}
               <tr><th scope="row">It refused without looking</th><td>A safety rule, “only answer SITIMM questions”, made it turn away questions about allied unions whose answers were in the index.</td><td>Search first, then decide what's off-topic. Unrelated requests and attempts to extract the prompt are still refused.</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </section>
 
       <section class="doc" aria-labelledby="h-numbers">
         <h2 id="h-numbers">How I knew</h2>
-        <div class="table-wrap" role="region" aria-labelledby="h-numbers" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-numbers-table" tabindex="0">
           <table class="data">
-            <caption class="vh">Measures before and after</caption>
+            <caption id="h-numbers-table" class="vh">Measures before and after</caption>
             <thead><tr><th scope="col">Measure</th><th scope="col" class="num">Before</th><th scope="col" class="num">After</th></tr></thead>
             <tbody>
               <tr><th scope="row">Test questions that found the expected source</th><td class="num">9 of 16</td><td class="num">13 of 16</td></tr>
@@ -598,7 +598,7 @@ html,body{margin:0}
               <tr><th scope="row">Keyword query, test database</th><td class="num">4–15 s</td><td class="num">36–83 ms</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
         <p>Unit tests with fake models were green the whole time. One bug only showed up against the real API: on its last round the model wrote a tool call as plain text until it ran out of tokens. Only the evaluation against the real thing caught it.</p>
       </section>
 
@@ -661,7 +661,7 @@ html,body{margin:0}
 </script>
 <script>
 document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',async()=>{
-  const v=b.closest('figure').querySelector('video');
+  const v=document.querySelector('.tour video');
   v.currentTime=+b.dataset.seek;v.play();
 }));
 </script>

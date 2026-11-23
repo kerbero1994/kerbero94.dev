@@ -428,6 +428,7 @@ html,body{margin:0}
 .shots-app{margin-top:1.5rem}
 /* video del recorrido: capítulos como botones y transcripción a la vista */
 .tour{margin-top:1.5rem}
+.tour-more{margin-top:.25rem}
 .tour video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000}
 .chapters{display:flex;flex-wrap:wrap;gap:.25rem 1.25rem;margin-top:.9rem}
 .chapters button{min-height:2rem;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
@@ -470,6 +471,7 @@ html,body{margin:0}
   .site *::before,.site *::after{content:none!important}
 }
 </style>
+<noscript><style>.style-btn{display:none!important}</style></noscript>
 </head>
 <body>
 
@@ -491,7 +493,7 @@ html,body{margin:0}
       </div>
     </header>
 
-    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+    <div id="style-picker" class="picker" popover role="dialog" aria-labelledby="picker-h">
       <h2 id="picker-h">Choose a style</h2>
       <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks.</p>
       <fieldset>
@@ -526,7 +528,6 @@ html,body{margin:0}
         </div>
       </fieldset>
     </div>
-    <noscript><style>.style-btn{display:none!important}</style></noscript>
 
     <main id="main">
       <section class="hero" aria-labelledby="h-hero">
@@ -560,6 +561,8 @@ html,body{margin:0}
             <source src="/media/app-tour.mp4" type="video/mp4">
           </video>
           <figcaption id="tour-note">The full tour, two minutes, made for the union's leadership. The on-screen text is in Spanish. There is no sound, so the transcript below covers everything shown.</figcaption>
+        </figure>
+        <div class="tour-more">
           <ul class="chapters" aria-label="Jump to a part of the video">
             <li><button type="button" data-seek="4.5">Home <span class="meta">0:04</span></button></li>
             <li><button type="button" data-seek="15.3">Magazines <span class="meta">0:15</span></button></li>
@@ -586,7 +589,7 @@ html,body{margin:0}
               <li><b>2:00, close.</b> “Yo Soy SITIMM. Sindicalismo de verdad.” (“I am SITIMM. Real unionism.”) QR codes for the App Store and Google Play.</li>
             </ol>
           </details>
-        </figure>
+        </div>
       </section>
 
       <section class="doc" aria-labelledby="h-problem">
@@ -638,9 +641,9 @@ html,body{margin:0}
       <section class="doc" aria-labelledby="h-rules">
         <h2 id="h-rules">Guardrails, and the incident behind each one</h2>
         <p>Every rule here exists because something broke. That's the part of working with agents nobody shows.</p>
-        <div class="table-wrap" role="region" aria-labelledby="h-rules" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-rules-table" tabindex="0">
           <table class="data">
-            <caption class="vh">Rules, the incident that caused each one, and how it's enforced</caption>
+            <caption id="h-rules-table" class="vh">Rules, the incident that caused each one, and how it's enforced</caption>
             <thead><tr><th scope="col">Rule</th><th scope="col">What happened</th><th scope="col">How it's enforced</th></tr></thead>
             <tbody>
               <tr><th scope="row">One worktree per agent</th><td>Jul 2026: two sessions shared one checkout. One switched branches under the other's build and mixed two tickets on one branch.</td><td>Writing agents get their own <code>git worktree</code>. The shared checkout is read-only.</td></tr>
@@ -652,14 +655,14 @@ html,body{margin:0}
               <tr><th scope="row">Never cite a ticket you haven't checked</th><td>22 references to Jira tickets that didn't exist.</td><td>Ticket keys are verified against Jira.</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </section>
 
       <section class="doc" aria-labelledby="h-numbers">
         <h2 id="h-numbers">Numbers</h2>
-        <div class="table-wrap" role="region" aria-labelledby="h-numbers" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-numbers-table" tabindex="0">
           <table class="data">
-            <caption class="vh">Figures for the SITIMM platform, with how each was measured</caption>
+            <caption id="h-numbers-table" class="vh">Figures for the SITIMM platform, with how each was measured</caption>
             <thead><tr><th scope="col">Metric</th><th scope="col" class="num">Value</th><th scope="col">How it was measured</th></tr></thead>
             <tbody>
               <tr><th scope="row">Commits since May 2025</th><td class="num">8,790</td><td>Git history of the five repos</td></tr>
@@ -675,7 +678,7 @@ html,body{margin:0}
               <tr><th scope="row">AI usage per merged pull request</th><td class="num">≈ $21</td><td>That week's usage divided by its merged pull requests, all work included</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </section>
 
       <section class="doc" aria-labelledby="h-diff">
@@ -737,7 +740,7 @@ html,body{margin:0}
 </script>
 <script>
 document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',async()=>{
-  const v=b.closest('figure').querySelector('video');
+  const v=document.querySelector('.tour video');
   v.currentTime=+b.dataset.seek;v.play();
 }));
 </script>

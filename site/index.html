@@ -499,6 +499,7 @@ html[data-vt=retro]::view-transition-new(root){transform-origin:4% 6%;animation:
   .site *::before,.site *::after{content:none!important}
 }
 </style>
+<noscript><style>.style-btn{display:none!important}</style></noscript>
 </head>
 <body>
 
@@ -520,7 +521,7 @@ html[data-vt=retro]::view-transition-new(root){transform-origin:4% 6%;animation:
       </div>
     </header>
 
-    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+    <div id="style-picker" class="picker" popover role="dialog" aria-labelledby="picker-h">
       <h2 id="picker-h">Choose a style</h2>
       <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks.</p>
       <fieldset>
@@ -556,7 +557,6 @@ html[data-vt=retro]::view-transition-new(root){transform-origin:4% 6%;animation:
       </fieldset>
       <p class="fact" id="style-fact"><b>Did you know?</b> <span></span></p>
     </div>
-    <noscript><style>.style-btn{display:none!important}</style></noscript>
 
     <main id="main">
       <section class="hero" aria-labelledby="h-hero">
