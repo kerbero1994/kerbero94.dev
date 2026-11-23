@@ -52,6 +52,9 @@ html,body{margin:0}
 /* encabezado: tres zonas fijas en todos los estilos (nombre · navegación · preferencias) */
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 2rem}
 .top .name{margin-right:auto;text-decoration:none}
+/* Under 560px the name gets its own row whatever the font: Bodoni is 14px wider than the
+   fallback, so the row used to re-wrap when it arrived and pushed main down (CLS 0.22). */
+@media (max-width:560px){.top .name{flex-basis:100%}}
 .top nav ul{display:flex;gap:.25rem 1.25rem}
 .top nav a{display:inline-flex;align-items:center;min-height:40px;text-decoration:none}
 .top nav a:hover,.top nav a[aria-current]{text-decoration:underline;text-underline-offset:.3em}
