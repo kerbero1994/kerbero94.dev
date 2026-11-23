@@ -1,4 +1,9 @@
 #!/bin/sh
-# Fast local gate: HTML validity and unit tests, a few seconds, no browser.
+# Fast local gate: HTML validity, unit tests, CSP hashes, spelling. A few seconds, no browser.
 # The browser suites (axe, e2e, visual, Lighthouse) run in CI, not on the shared Mac.
+major=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
+if [ "$major" -lt 22 ]; then
+  echo "pre-push needs Node 22 or newer (found $(node -v 2>/dev/null || echo none)). See .nvmrc." >&2
+  exit 1
+fi
 npm run --silent test:static
