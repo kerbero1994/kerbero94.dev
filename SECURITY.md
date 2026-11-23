@@ -13,5 +13,6 @@ kerbero94.dev and this repository: the static site, its HTTP headers and Content
 - A Content Security Policy with no `unsafe-inline`: every inline script and style is allowed by its SHA-256 hash, and a unit test fails when a hash goes stale.
 - HSTS with preload, `X-Frame-Options: DENY`, COOP, CORP, Permissions-Policy. The deploy requires an A+ from Mozilla's HTTP Observatory, and the daily monitor checks it again.
 - gitleaks scans the whole git history on every pull request and deploy.
-- Self-hosted fonts, no cookies, no third-party scripts.
+- Self-hosted fonts, no cookies. The only script not written here is Netlify's Real User Monitoring: it's served from the same origin and reports page-speed metrics to Netlify's collector, the one extra host the CSP allows (`connect-src`).
+- Production is opened in a real browser after every deploy and every day: any console error or CSP violation fails the check.
 - The only secret is the Netlify deploy token: an encrypted Actions secret, never available to pull requests from forks or Dependabot. The daily monitor checks it's still valid.

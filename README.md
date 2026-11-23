@@ -78,4 +78,6 @@ The browser suites run in CI so the shared Mac isn't loaded; run them locally on
 
 **License:** the code is MIT (`LICENSE`). The site's content (text, images, video, résumé) is © Eduardo González, all rights reserved. Fonts are under the SIL OFL (`site/fonts/README.txt`). Security reports: `SECURITY.md`.
 
+**Analytics:** Netlify's server-side Web Analytics (from CDN logs, no script: visitors, top pages, sources, 24 h of history on the free plan) and Real User Monitoring (Core Web Vitals from real visitors: LCP, INP, CLS, FCP). Netlify injects the RUM script in production only, from the same origin; the CSP allows its collector in `connect-src`, and `checks/prod-console.cjs` fails if anything in production logs an error or a CSP violation.
+
 **Caching:** fonts are cached for a year (`immutable`), images and video for 30 days. Give a changed image or font a new file name.

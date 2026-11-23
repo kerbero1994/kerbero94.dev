@@ -25,6 +25,8 @@ jobs:
       - run: npm ci
       - run: bash checks/smoke.sh
       - run: bash checks/observatory.sh
+      - name: No console errors or CSP violations in production (real browser)
+        run: node checks/prod-console.cjs
       - run: bash checks/dns.sh
       - name: Netlify token and credits
         env:
