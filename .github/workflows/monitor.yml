@@ -36,8 +36,7 @@ jobs:
           LHCI_ORIGIN: https://kerbero94.dev
       - if: always()
         run: |
-          echo "### Lighthouse on kerbero94.dev, median of 3 runs, mobile" >> "$GITHUB_STEP_SUMMARY"
-          node checks/lh-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+          { echo "### Lighthouse on kerbero94.dev, median of 3 runs, mobile"; node checks/lh-summary.mjs; } | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         if: always()
-        with: { name: lighthouse-production, path: .lighthouseci }
+        with: { name: lighthouse-production, path: .lighthouseci, include-hidden-files: true }

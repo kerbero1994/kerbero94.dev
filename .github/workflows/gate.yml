@@ -93,8 +93,7 @@ jobs:
       - run: npx lhci autorun
       - if: always()
         run: |
-          echo "### Lighthouse, median of 3 runs, mobile" >> "$GITHUB_STEP_SUMMARY"
-          node checks/lh-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+          { echo "### Lighthouse, median of 3 runs, mobile"; node checks/lh-summary.mjs; } | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         if: always()
-        with: { name: lighthouse, path: .lighthouseci }
+        with: { name: lighthouse, path: .lighthouseci, include-hidden-files: true }
