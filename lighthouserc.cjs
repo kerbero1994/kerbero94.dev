@@ -11,11 +11,11 @@ module.exports = {
       numberOfRuns: 3,
     },
     assert: {
-      // Floors from the 23 Nov 2026 baseline (CI, mobile): every category 100 except
-      // performance; LCP 1.6 s; TBT 0 ms; heaviest page 724 KiB. CLS was 0.22 until the
+      // Floors from the 23 Nov 2026 baseline (CI, mobile): every category 100, performance
+      // 99-100 after the CLS fix; LCP 1.6 s; TBT 0 ms; heaviest page 724 KiB. CLS was 0.22 until the
       // header stopped re-wrapping when the web font arrived.
       assertions: {
-        'categories:performance': ['error', { minScore: 0.9 }],
+        'categories:performance': ['error', { minScore: 0.95 }], // ratcheted: 99-100 once CLS was fixed
         'categories:accessibility': ['error', { minScore: 1 }],
         'categories:best-practices': ['error', { minScore: 1 }],
         'categories:seo': ['error', { minScore: 1 }],
