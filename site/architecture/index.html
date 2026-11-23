@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dt9MPSFOaBdUE/IThTJ4Xro80HcbS2q+XplWOJRxnb8=' 'sha256-cdQm1cFNSuB0WILTgRg6WzEPDkmcPiY7JcRIg8r8BVU=' 'sha256-sNuC33YpqIpvzkRhjpLUpteFsXgLPVAMbB6S2A2YOqw=' 'sha256-zQkLt72L+STQwrCchVBq4QeHFPY0sCWtrM2gSAPhIkY=' https://static.cloudflareinsights.com; style-src 'self' 'sha256-GpUwtd5eNz8kYJvrVO5/NxeAHTGyhtXv7hylcn7i8HE=' 'sha256-W+Xal1iCBcfR2U6s0PpsCXFa4DPaQqLbUcEBbjf37VQ=' 'sha256-r17YnH6cp5jjL/9oGRvNsvYJCc0/V2NnOyKDVHfNveQ=' 'sha256-tr23av5UzdLaU6vMUButUewVDNMEBeqapxT/4qGKR2w=' 'sha256-vu+JxNFaqh2zVTO+08wyfX9+jGNhTRoKNWZbOnq2F40='; img-src 'self' data:; font-src 'self'; media-src 'self'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" id="theme-color" content="#FBF9F9">
+<title>Architecture and delivery: Eduardo González</title>
+<meta name="description" content="How one engineer built a union's platform: the architecture, the contract between five repos, CI/CD without a CI budget, and each trade-off.">
+<link rel="canonical" href="https://kerbero94.dev/architecture/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Eduardo González">
+<meta property="og:title" content="Architecture and delivery: Eduardo González">
+<meta property="og:description" content="How one engineer built a union's platform: the architecture, the contract between five repos, CI/CD without a CI budget, and each trade-off.">
+<meta property="og:url" content="https://kerbero94.dev/architecture/">
+<meta property="og:image" content="https://kerbero94.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/fonts/bodoni-moda.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: light)">
+<link rel="preload" href="/fonts/bodoni-moda-italic.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: light)">
+<link rel="preload" href="/fonts/atkinson-hyperlegible-next.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: light)">
+<link rel="preload" href="/fonts/gloock.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: dark)">
+<link rel="preload" href="/fonts/albert-sans.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: dark)">
+<style>
+/* Self-hosted fonts (SIL OFL 1.1, latin subset from Google Fonts): no third-party request, nothing render-blocking. */
+@font-face{font-family:"Aboreto";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/aboreto.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Albert Sans";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/albert-sans.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Architects Daughter";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/architects-daughter.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Archivo Black";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/archivo-black.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Atkinson Hyperlegible Mono";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/atkinson-hyperlegible-mono.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Atkinson Hyperlegible Next";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/atkinson-hyperlegible-next.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Bodoni Moda";font-style:italic;font-weight:400 700;font-display:swap;src:url(/fonts/bodoni-moda-italic.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Bodoni Moda";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/bodoni-moda.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/courier-prime-400.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/courier-prime-700.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Gloock";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/gloock.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Josefin Sans";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/josefin-sans.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Jost";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/jost.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Martian Mono";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/martian-mono.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Schibsted Grotesk";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/schibsted-grotesk.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"VT323";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/vt323.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+
+/* ===== base compartida: el contrato de coherencia ===== */
+.site{
+  --bg:#fff;--fg:#111;--muted:#555;--accent:#00e;--accent-ink:#fff;--line:#0003;--ok:#1F9D55;
+  --font-body:system-ui,sans-serif;--font-display:var(--font-body);
+  --radius:0;--gap:clamp(1.25rem,3vw,2rem);--section:clamp(3rem,8vw,6rem);
+  position:relative;isolation:isolate;overflow:hidden;min-height:100vh;
+  padding:clamp(1.25rem,4vw,3.5rem);background:var(--bg);color:var(--fg);
+  font:400 1.0625rem/1.6 var(--font-body)}
+.site *{margin:0}
+.site ul,.site ol{list-style:none;padding:0}
+.site img{display:block;max-width:100%;height:auto}
+.site h1,.site h2,.site h3{font-family:var(--font-display);text-wrap:balance}
+.site h2{font-size:1.75rem;line-height:1.15}
+.site h3{font-size:1.35rem;line-height:1.25}
+.site p{text-wrap:pretty}
+.site .lede,.site .now p,.site .contact p,.site .case-body p{max-width:65ch}
+/* enlaces: subrayados dentro de un texto en los 10 estilos */
+.site a{color:inherit}
+.site p a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}
+.site p a:hover{text-decoration-thickness:2px}
+.site :focus-visible{outline:3px solid var(--focus,var(--accent));outline-offset:3px}
+.skip{position:absolute;top:-6rem;left:1rem;z-index:3;padding:.6rem 1rem;background:var(--fg);color:var(--bg)!important}
+.skip:focus{top:1rem}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* encabezado: tres zonas fijas en todos los estilos (nombre · navegación · preferencias) */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 2rem}
+.top .name{margin-right:auto;text-decoration:none}
+/* Under 560px the name gets its own row whatever the font: Bodoni is 14px wider than the
+   fallback, so the row used to re-wrap when it arrived and pushed main down (CLS 0.22). */
+@media (max-width:560px){.top .name{flex-basis:100%}}
+.top nav ul{display:flex;gap:.25rem 1.25rem}
+.top nav a{display:inline-flex;align-items:center;min-height:40px;text-decoration:none}
+.top nav a:hover,.top nav a[aria-current]{text-decoration:underline;text-underline-offset:.3em}
+.top nav a[aria-current]{text-decoration-thickness:2px}
+.prefs{display:flex;align-items:center;gap:.5rem}
+.prefs a,.style-btn{display:inline-flex;align-items:center;gap:.5rem;min-height:40px;padding:0 .75rem;border:1px solid currentColor;border-radius:var(--radius);background:transparent;color:inherit;font:inherit;font-size:.95rem;text-decoration:none;cursor:pointer}
+.prefs a:hover,.style-btn:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.sw{display:inline-grid;place-items:center;flex:none;width:1.6rem;height:1.6rem;border:1px solid var(--fg);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:400 .8rem/1 var(--font-display);position:relative}
+.sw::after{content:"";position:absolute;right:-3px;bottom:-3px;width:.6rem;height:.6rem;border-radius:50%;background:var(--accent);outline:1px solid var(--bg)}
+
+/* selector de estilos: popover nativo con vista previa */
+.picker{inset:auto;top:5rem;right:1rem;width:min(34rem,calc(100vw - 2rem));max-height:calc(100vh - 6rem);overflow:auto;margin:0;padding:1.25rem;border:2px solid var(--fg);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:400 1rem/1.5 var(--font-body)}
+.picker h2{font-size:1.35rem}
+.picker-note{margin-top:.25rem;color:var(--muted)}
+.picker fieldset{margin:1rem 0 0;padding:0;border:0}
+.picker legend{padding:0;margin-bottom:.4rem;font-weight:700}
+.picker .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.4rem}
+.opt{position:relative;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.75rem;min-height:48px;padding:.45rem .6rem;border:1px solid transparent;border-radius:var(--radius);cursor:pointer}
+.opt:hover{background:color-mix(in srgb,var(--fg) 7%,transparent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt:has(input:checked){border-color:var(--fg)}
+.opt:has(input:focus-visible){outline:3px solid var(--focus,var(--accent));outline-offset:2px}
+.opt b{display:block;font-weight:700}
+.opt small{display:block;font-size:.85rem;color:var(--muted)}
+.opt:has(input:checked) b::after{content:" ✓" / ""}
+.opt .sw{width:2.6rem;height:2.6rem;font-size:1.15rem}
+.sw-auto{background:linear-gradient(135deg,#FBF9F9 50%,#0C0C0D 50%)!important;color:transparent!important}
+
+/* hero: quién, qué, disponible y cómo contactarlo, arriba del pliegue */
+.kicker{font-size:1rem;font-weight:600}
+.avail{display:flex;align-items:center;gap:.6rem;margin-top:1.25rem}
+.avail .dot{width:.65rem;height:.65rem;border-radius:50%;background:var(--ok);flex:none}
+.cta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem}
+.btn{display:inline-flex;align-items:center;gap:.5em;min-height:44px;padding:.55rem 1.1rem;border:2px solid currentColor;border-radius:var(--radius);color:inherit;font-weight:600;text-decoration:none;transition:background-color .15s ease-out,color .15s ease-out,transform .15s ease-out}
+.btn:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.btn:active{transform:translateY(1px)}
+/* .site a{color:inherit} outranks a lone class: anchor the button to .site */
+.site .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:color-mix(in srgb,var(--accent) 85%,var(--fg))}
+.btn-link{padding-inline:.4rem;border-color:transparent;text-decoration:underline;text-underline-offset:.2em}
+.btn .meta{font-weight:400;font-size:.85em;opacity:.85}
+
+.site main>section{margin-top:var(--section)}
+.site main>.hero{margin-top:clamp(2.5rem,7vw,5rem)}
+
+/* casos: filas grandes, el primero más grande; toda la fila es el enlace */
+.cases ul{display:grid;gap:clamp(2rem,5vw,3.5rem);margin-top:1.25rem}
+.case{position:relative;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:var(--gap)}
+.case-lead{grid-template-columns:3fr 2fr;align-items:end}
+.case:nth-child(2) .shot{order:2}
+.case:not(:has(.shot)){grid-template-columns:1fr}
+.shot img{width:100%;aspect-ratio:16/8;object-fit:cover;object-position:top}
+.case h3 a{text-decoration:none}
+.case h3 a::after{content:" →" / "";display:inline-block;transition:transform .2s cubic-bezier(.16,1,.3,1)}
+.case h3 a::before{content:"";position:absolute;inset:0;z-index:1}
+.case:hover h3 a{text-decoration:underline;text-underline-offset:.2em}
+.case:hover h3 a::after{transform:translateX(4px)}
+.case-body{display:grid;gap:.6rem}
+.case .meta{font-size:.9rem;color:var(--muted)}
+
+.timeline{margin-top:1rem}
+.timeline li{display:grid;grid-template-columns:6rem 1fr 1.3fr;column-gap:1rem;padding:.8rem 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.timeline .yr,.timeline .role{color:var(--muted)}
+.timeline .co{font-weight:600}
+.contact .cta{margin-top:1.25rem}
+.foot{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:var(--section);padding-top:1.25rem;border-top:1px solid var(--line);font-size:.95rem;color:var(--muted)}
+.foot a{text-decoration:underline;text-underline-offset:.2em}
+
+/* ===== tokens por estilo (también los usa la miniatura del selector) ===== */
+[data-style=classic]{--bg:#FBF9F9;--fg:#1C1718;--muted:#5A5254;--accent:#8A2432;--accent-ink:#fff;--line:#1C171826;--font-display:"Bodoni Moda",serif;--font-body:"Atkinson Hyperlegible Next",sans-serif}
+[data-style=swiss]{--bg:#FFFFFF;--fg:#111111;--muted:#4D4D4D;--accent:#B40217;--accent-ink:#fff;--line:#111;--font-display:"Schibsted Grotesk",sans-serif;--font-body:"Schibsted Grotesk",sans-serif}
+[data-style=noir]{--bg:#0C0C0D;--fg:#ECE8E1;--muted:#B3AEA6;--accent:#F0A63A;--accent-ink:#0C0C0D;--line:#2E2C29;--font-display:Gloock,serif;--font-body:"Albert Sans",sans-serif}
+[data-style=deco]{--bg:#0F1F1C;--fg:#EFE6D2;--muted:#CFC2A3;--accent:#D9B46A;--accent-ink:#0F1F1C;--line:#D9B46A59;--font-display:Aboreto,serif;--font-body:"Josefin Sans",sans-serif}
+[data-style=brutal]{--bg:#E8E8E3;--fg:#000;--muted:#000;--accent:#0000EE;--accent-ink:#fff;--line:#000;--focus:#000;--font-display:Arial,"Helvetica Neue",Helvetica,sans-serif;--font-body:"Times New Roman",Times,serif}
+[data-style=bauhaus]{--bg:#F2F3F5;--fg:#141414;--muted:#3A3A3A;--accent:#AB221A;--accent-ink:#fff;--blue:#1E4EA1;--yellow:#F2B705;--line:#141414;--font-display:Jost,sans-serif;--font-body:Jost,sans-serif}
+[data-style=riso]{--bg:#F7F6F6;--fg:#22306A;--muted:#33427E;--accent:#FF48B0;--accent-ink:#22306A;--tint:#FFC2E0;--line:#22306A;--font-display:"Archivo Black",sans-serif;--font-body:"Courier Prime",monospace}
+[data-style=terminal]{--bg:#0B0F0B;--fg:#A9F5A0;--muted:#7FCF77;--accent:#FFB000;--accent-ink:#0B0F0B;--line:#2A3F2A;--font-display:VT323,monospace;--font-body:"Atkinson Hyperlegible Mono",monospace}
+[data-style=blueprint]{--bg:#123F7C;--fg:#F4F7FF;--muted:#C9D8F2;--accent:#FFD866;--accent-ink:#123F7C;--line:#F4F7FF80;--font-display:"Architects Daughter",cursive;--font-body:"Martian Mono",monospace}
+[data-style=retro]{--bg:#006363;--fg:#000;--muted:#1A1A1A;--accent:#000080;--accent-ink:#fff;--line:#808080;--focus:#000;--font-display:Verdana,Tahoma,sans-serif;--font-body:Verdana,Tahoma,sans-serif}
+
+/* ===== 1. New classic: libro de imprenta universitaria, no revista ===== */
+.site[data-style=classic]{font-size:1.125rem;line-height:1.65}
+.site[data-style=classic] .inner{max-width:46rem;margin-inline:auto}
+.site[data-style=classic] .name{font:600 1.35rem/1 var(--font-display)}
+.site[data-style=classic] .kicker{color:var(--muted);font-weight:700}
+.site[data-style=classic] h1{margin-top:.75rem;font-size:clamp(2.75rem,6.5vw,4.75rem);font-weight:500;line-height:1.02;letter-spacing:-.01em;font-variation-settings:"opsz" 96}
+.site[data-style=classic] h1 em{font-style:italic;color:var(--accent)}
+.site[data-style=classic] .lede{margin-top:1.25rem;font-size:1.25rem;color:var(--muted)}
+.site[data-style=classic] h2{font-size:2rem;font-weight:600}
+.site[data-style=classic] h3{font-size:1.5rem;font-weight:600}
+.site[data-style=classic] .case{grid-template-columns:1fr}
+.site[data-style=classic] .case .shot{order:0}
+.site[data-style=classic] .timeline li{grid-template-columns:5.5rem 1fr}
+.site[data-style=classic] .timeline .yr{grid-row:span 2}
+.site[data-style=classic] .timeline .co{font:600 1.2rem/1.3 var(--font-display)}
+
+/* ===== 2. Suizo: póster de Müller-Brockmann, rejilla de 12 ===== */
+.site[data-style=swiss] .inner{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:1.25rem}
+.site[data-style=swiss] .top,.site[data-style=swiss] main,.site[data-style=swiss] .foot{grid-column:1/-1}
+.site[data-style=swiss] main,.site[data-style=swiss] .hero{display:grid;grid-template-columns:subgrid}
+.site[data-style=swiss] .top{padding-top:.6rem;border-top:2px solid var(--fg);font-weight:600}
+.site[data-style=swiss] .name{font-weight:700}
+.site[data-style=swiss] .hero,.site[data-style=swiss] .cases,.site[data-style=swiss] .work{grid-column:1/-1}
+.site[data-style=swiss] .hero>*{grid-column:5/-1}
+.site[data-style=swiss] .hero>.kicker,.site[data-style=swiss] .hero>h1{grid-column:1/-1}
+.site[data-style=swiss] h1{margin:.75rem 0 1.5rem;font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:.95;letter-spacing:-.04em}
+.site[data-style=swiss] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=swiss] .lede{font-size:1.25rem;line-height:1.4}
+.site[data-style=swiss] .now,.site[data-style=swiss] .contact{grid-column:5/-1}
+.site[data-style=swiss] h2{padding-top:.5rem;border-top:2px solid var(--fg);font-weight:700;letter-spacing:-.01em}
+.site[data-style=swiss] h3{font-weight:700;letter-spacing:-.02em}
+.site[data-style=swiss] .timeline li{border-top-color:var(--fg)}
+.site[data-style=swiss] .timeline .co{font-weight:700}
+.site[data-style=swiss] .now p{font-size:1.5rem;font-weight:500;line-height:1.3}
+
+/* ===== 3. Noir: cuadernillo de Criterion ===== */
+.site[data-style=noir]{line-height:1.75}
+.site[data-style=noir] .inner{max-width:76rem;margin-inline:auto}
+.site[data-style=noir] .name{font:400 1.4rem/1 var(--font-display)}
+.site[data-style=noir] main{display:grid;grid-template-columns:1fr 2fr;column-gap:clamp(2rem,6vw,6rem)}
+.site[data-style=noir] main>section{grid-column:1/-1}
+.site[data-style=noir] .now,.site[data-style=noir] .work,.site[data-style=noir] .contact{display:grid;grid-template-columns:subgrid;align-items:start}
+.site[data-style=noir] .now>*,.site[data-style=noir] .work>*,.site[data-style=noir] .contact>*{grid-column:2}
+.site[data-style=noir] .now>h2,.site[data-style=noir] .work>h2,.site[data-style=noir] .contact>h2{grid-column:1}
+.site[data-style=noir] .hero{margin-top:clamp(3rem,10vh,7rem)}
+.site[data-style=noir] .kicker{color:var(--accent)}
+.site[data-style=noir] h1{max-width:14ch;margin-top:1rem;font-size:clamp(3rem,8vw,6rem);font-weight:400;line-height:.98;letter-spacing:-.02em}
+.site[data-style=noir] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=noir] .lede{margin-top:1.75rem;font-size:1.15rem;color:var(--muted)}
+.site[data-style=noir] h2{font-size:2rem;font-weight:400}
+.site[data-style=noir] h3{font-size:1.6rem;font-weight:400}
+.site[data-style=noir] .now p{font:400 1.6rem/1.35 var(--font-display)}
+.site[data-style=noir] .timeline{margin-top:0}
+.site[data-style=noir] .timeline .yr{color:var(--accent)}
+.site[data-style=noir] .timeline .co{font:400 1.25rem/1.3 var(--font-display)}
+.site[data-style=noir] .shot img{filter:grayscale(1) contrast(1.1)}
+
+/* ===== 4. Art Deco: vestíbulo del Chrysler, simetría y oro ===== */
+.site[data-style=deco]{font-size:1.125rem;line-height:1.75}
+.site[data-style=deco] .inner{max-width:58rem;margin-inline:auto;padding:clamp(1.25rem,4vw,3rem);border:1px solid var(--accent);outline:1px solid var(--accent);outline-offset:6px}
+.site[data-style=deco] .name{font:400 1.25rem/1 var(--font-display);letter-spacing:.15em;color:var(--accent)}
+.site[data-style=deco] .hero,.site[data-style=deco] .now,.site[data-style=deco] .contact{text-align:center}
+.site[data-style=deco] .hero{position:relative;padding-top:2rem}
+.site[data-style=deco] .hero::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:min(46rem,120%);aspect-ratio:2/1;translate:-50% 0;border-radius:999px 999px 0 0;background:repeating-conic-gradient(from -90deg at 50% 100%,#D9B46A21 0 3deg,transparent 3deg 9deg)}
+.site[data-style=deco] .kicker{color:var(--accent);letter-spacing:.2em;text-transform:uppercase;font-size:.9rem}
+.site[data-style=deco] h1{margin-top:1rem;font-size:clamp(2.2rem,5.5vw,4.2rem);font-weight:400;line-height:1.15;letter-spacing:.04em}
+.site[data-style=deco] h1 em{font-style:normal;color:var(--accent)}
+.site[data-style=deco] .lede,.site[data-style=deco] .now p,.site[data-style=deco] .contact p{margin-inline:auto}
+.site[data-style=deco] .lede{margin-top:1.5rem;color:var(--muted)}
+.site[data-style=deco] .avail,.site[data-style=deco] .cta{justify-content:center}
+.site[data-style=deco] h2{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;font-size:1.5rem;font-weight:400;letter-spacing:.15em;color:var(--accent)}
+.site[data-style=deco] h2::before,.site[data-style=deco] h2::after{content:"";flex:1;height:5px;border-block:1px solid var(--accent)}
+.site[data-style=deco] h3{font-size:1.2rem;font-weight:400;letter-spacing:.06em;color:var(--accent)}
+.site[data-style=deco] .shot{padding:6px;border:1px solid var(--accent)}
+.site[data-style=deco] .shot img{filter:sepia(.35) contrast(1.05)}
+.site[data-style=deco] .timeline li{grid-template-columns:1fr 11rem 1fr;align-items:baseline}
+.site[data-style=deco] .timeline .yr{text-align:right;color:var(--accent)}
+.site[data-style=deco] .timeline .co{font:400 1.05rem/1.3 var(--font-display);letter-spacing:.08em;text-align:center}
+
+/* ===== 5. Brutalismo: HTML crudo, fuentes del sistema, cero descargas ===== */
+.site[data-style=brutal]{font-size:1.125rem;line-height:1.5}
+.site[data-style=brutal] .top,.site[data-style=brutal] main>section{padding:1rem 1.25rem;background:#fff;border:3px solid #000}
+.site[data-style=brutal] .name{font:900 1.1rem/1 var(--font-display);text-transform:uppercase}
+.site[data-style=brutal] .top nav a,.site[data-style=brutal] .foot a,.site[data-style=brutal] p a{color:var(--accent);text-decoration:underline}
+.site[data-style=brutal] .top nav a:visited,.site[data-style=brutal] p a:visited{color:#551A8B}
+.site[data-style=brutal] .prefs a,.site[data-style=brutal] .style-btn{border-width:3px;background:#fff}
+.site[data-style=brutal] main{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-top:1rem}
+.site[data-style=brutal] main>section{margin-top:0}
+.site[data-style=brutal] .cases,.site[data-style=brutal] .work,.site[data-style=brutal] .contact{grid-column:1/-1}
+.site[data-style=brutal] .kicker{display:inline-block;padding:.1rem .5rem;background:#000;color:#fff}
+.site[data-style=brutal] h1{margin-top:1rem;font-size:clamp(2.2rem,5.5vw,4.4rem);font-weight:900;line-height:1;letter-spacing:-.02em;text-transform:uppercase}
+.site[data-style=brutal] h1 em{font-style:normal;padding:0 .15em;background:#FFE500}
+.site[data-style=brutal] .lede{margin-top:1.25rem}
+.site[data-style=brutal] h2{font-size:1.6rem;font-weight:900;text-transform:uppercase}
+.site[data-style=brutal] h2::before{content:"// " / ""}
+.site[data-style=brutal] h3{font-weight:700}
+.site[data-style=brutal] h3 a{color:var(--accent);text-decoration:underline}
+.site[data-style=brutal] main>.now{background:#000;color:#fff}
+.site[data-style=brutal] main>.now p a{color:#9DB8FF}
+.site[data-style=brutal] .btn{border-width:3px;background:#fff;color:#000}
+.site[data-style=brutal] .btn-primary{background:var(--accent);border-color:#000;color:#fff}
+.site[data-style=brutal] .btn:hover{background:#FFE500;color:#000}
+.site[data-style=brutal] .btn-link{border-color:transparent;background:transparent;color:var(--accent)}
+.site[data-style=brutal] .shot{border:3px solid #000}
+.site[data-style=brutal] .timeline li{border-top:2px solid #000}
+.site[data-style=brutal] .timeline .co{font-family:var(--font-display);font-weight:700}
+.site[data-style=brutal] :focus-visible{outline:4px solid #000;outline-offset:2px;background:#FFE500;color:#000}
+
+/* ===== 6. Bauhaus: cartel de Bayer, forma y color primario ===== */
+.site[data-style=bauhaus] .inner{max-width:72rem;margin-inline:auto}
+.site[data-style=bauhaus] .name{font-size:1.25rem;font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] .top nav a{text-transform:lowercase}
+.site[data-style=bauhaus] .hero{position:relative;min-height:28rem;padding-right:36%}
+.site[data-style=bauhaus] .hero::before{content:"";position:absolute;right:6%;top:0;width:min(22rem,28%);aspect-ratio:1;border-radius:50%;background:var(--accent)}
+.site[data-style=bauhaus] .hero::after{content:"";position:absolute;right:0;bottom:0;width:min(16rem,20%);aspect-ratio:1;background:var(--blue);clip-path:polygon(0 100%,100% 100%,100% 0)}
+.site[data-style=bauhaus] .kicker{font-weight:500}
+.site[data-style=bauhaus] h1{margin-top:1rem;font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:.95;letter-spacing:-.03em;text-transform:lowercase}
+.site[data-style=bauhaus] h1 em{font-style:normal;color:var(--blue)}
+.site[data-style=bauhaus] .lede{margin-top:1.5rem;font-size:1.2rem}
+.site[data-style=bauhaus] h2{font-size:2rem;font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] h3{font-weight:700;text-transform:lowercase}
+.site[data-style=bauhaus] .now{padding:1.75rem;background:var(--yellow)}
+.site[data-style=bauhaus] .now p{font-size:1.4rem;font-weight:500;line-height:1.35}
+.site[data-style=bauhaus] .timeline li{border-top:2px solid var(--fg)}
+.site[data-style=bauhaus] .timeline .yr{font-weight:700;color:var(--blue)}
+.site[data-style=bauhaus] .timeline .co{font-weight:700}
+.site[data-style=bauhaus] .case:nth-child(2) .shot{border:10px solid var(--blue)}
+.site[data-style=bauhaus] .case-lead .shot{border:10px solid var(--accent)}
+
+/* ===== 7. Risograph: fanzine a dos tintas ===== */
+.site[data-style=riso]::after{content:"";position:absolute;z-index:-1;right:-6rem;bottom:-6rem;width:28rem;aspect-ratio:1;border-radius:50%;opacity:.6;background:radial-gradient(var(--accent) 35%,transparent 37%) 0 0/12px 12px}
+.site[data-style=riso] .inner{max-width:68rem;margin-inline:auto}
+.site[data-style=riso] .name{font:400 1.1rem/1 var(--font-display);text-transform:uppercase}
+.site[data-style=riso] .kicker{display:inline-block;padding:.15rem .6rem;background:var(--tint);transform:rotate(-2deg)}
+.site[data-style=riso] h1{margin-top:1rem;font-size:clamp(2.8rem,7vw,6rem);font-weight:400;line-height:.95;letter-spacing:-.02em;text-transform:uppercase;text-shadow:.06em .04em 0 var(--accent);mix-blend-mode:multiply}
+.site[data-style=riso] h1 em{font-style:normal;background:linear-gradient(transparent 55%,var(--tint) 55%)}
+.site[data-style=riso] .lede{margin-top:1.5rem}
+.site[data-style=riso] h2{font-size:1.75rem;font-weight:400;text-transform:uppercase;text-shadow:.06em .05em 0 var(--accent)}
+.site[data-style=riso] h3{font-size:1.2rem;font-weight:400;text-transform:uppercase}
+.site[data-style=riso] .btn-primary{background:var(--fg);border-color:var(--fg);color:#fff}
+.site[data-style=riso] .now{padding:1.25rem 1.5rem;background:var(--tint);transform:rotate(-1deg)}
+.site[data-style=riso] .shot{background:var(--tint)}
+.site[data-style=riso] .shot img{filter:grayscale(1) contrast(1.2);mix-blend-mode:multiply}
+.site[data-style=riso] .case:nth-child(2){transform:rotate(1deg)}
+.site[data-style=riso] .timeline li{border-top:2px dotted var(--fg)}
+.site[data-style=riso] .timeline .co{font-weight:700}
+
+/* ===== 8. Terminal: manual de un VT100 ===== */
+.site[data-style=terminal]{text-shadow:0 0 6px #78FF7859}
+.site[data-style=terminal] .inner{max-width:62rem;margin-inline:auto}
+.site[data-style=terminal] .name::before{content:"~/" / "";color:var(--muted)}
+.site[data-style=terminal] .top nav a::before{content:"[" / ""}
+.site[data-style=terminal] .top nav a::after{content:"]" / ""}
+.site[data-style=terminal] .kicker{color:var(--muted);font-weight:400}
+.site[data-style=terminal] .kicker::before{content:"> " / "";color:var(--accent)}
+.site[data-style=terminal] h1{margin-top:.75rem;font-size:clamp(3rem,7vw,6rem);font-weight:400;line-height:1;color:#D6FFD0}
+.site[data-style=terminal] h1 em{font-style:normal;color:var(--accent)}
+/* el cursor parpadea 3 s y se queda fijo: WCAG 2.2.2 pide pausa si dura más de 5 s */
+.site[data-style=terminal] h1::after{content:"█" / "";animation:pf-blink 1s steps(1) 3}
+@keyframes pf-blink{50%{opacity:0}}
+.site[data-style=terminal] .lede{margin-top:1.5rem}
+.site[data-style=terminal] h2{font-size:2.1rem;font-weight:400;color:var(--accent);text-transform:lowercase}
+.site[data-style=terminal] h2::before{content:"$ cat " / "";color:var(--muted)}
+.site[data-style=terminal] h2::after{content:".md" / ""}
+.site[data-style=terminal] h3{font-size:1.6rem;font-weight:400}
+.site[data-style=terminal] .btn{border-width:1px}
+.site[data-style=terminal] .btn::before{content:"[" / ""}
+.site[data-style=terminal] .btn::after{content:"]" / ""}
+.site[data-style=terminal] .btn-primary{background:var(--fg);border-color:var(--fg);color:var(--bg);text-shadow:none}
+.site[data-style=terminal] .shot{border:1px dashed var(--line)}
+.site[data-style=terminal] .shot img{filter:grayscale(1) sepia(1) hue-rotate(60deg) saturate(2.5) brightness(.8)}
+.site[data-style=terminal] .timeline li{border-top-style:dashed}
+.site[data-style=terminal] .timeline .yr{color:var(--accent)}
+
+/* ===== 9. Blueprint: lámina de arquitecto (guiño a la etapa de arquitectura) ===== */
+.site[data-style=blueprint]{font-size:1rem;background-image:linear-gradient(#ffffff12 1px,transparent 1px),linear-gradient(90deg,#ffffff12 1px,transparent 1px),linear-gradient(#ffffff24 1px,transparent 1px),linear-gradient(90deg,#ffffff24 1px,transparent 1px);background-size:20px 20px,20px 20px,100px 100px,100px 100px}
+.site[data-style=blueprint] .inner{max-width:70rem;margin-inline:auto;counter-reset:fig}
+.site[data-style=blueprint] .top{padding-bottom:.75rem;border-bottom:1px solid var(--line)}
+.site[data-style=blueprint] .name{font:400 1.45rem/1 var(--font-display)}
+.site[data-style=blueprint] .prefs a,.site[data-style=blueprint] .style-btn,.site[data-style=blueprint] .btn{border-style:dashed}
+.site[data-style=blueprint] main>section{padding:1.5rem;border:1px dashed var(--line);counter-increment:fig}
+.site[data-style=blueprint] .kicker{color:var(--accent);font-weight:400}
+.site[data-style=blueprint] h1{margin-top:.75rem;font-size:clamp(2.6rem,6vw,5.2rem);font-weight:400;line-height:1.05}
+.site[data-style=blueprint] h1 em{font-style:normal;color:var(--accent);text-decoration:underline 2px;text-underline-offset:.15em}
+.site[data-style=blueprint] h1::after{content:"←— elevation A · scale 1:1 —→" / "";display:block;margin-top:.75rem;font:400 .8rem/1 var(--font-body);letter-spacing:.1em;color:var(--muted)}
+.site[data-style=blueprint] .lede{margin-top:1.25rem;color:var(--muted)}
+.site[data-style=blueprint] h2{font-size:1.9rem;font-weight:400}
+.site[data-style=blueprint] h2::before{content:"A-0" counter(fig) "  " / "";font:600 .8rem/1 var(--font-body);letter-spacing:.1em;color:var(--accent);vertical-align:middle}
+.site[data-style=blueprint] h3{font-size:1.5rem;font-weight:400}
+.site[data-style=blueprint] .btn-primary{border-style:solid}
+.site[data-style=blueprint] .shot{border:1px dashed var(--line);background:var(--bg)}
+.site[data-style=blueprint] .shot img{filter:grayscale(1) contrast(1.15);mix-blend-mode:luminosity;opacity:.9}
+.site[data-style=blueprint] .timeline li{border-top-style:dashed}
+.site[data-style=blueprint] .timeline .yr{color:var(--accent)}
+.site[data-style=blueprint] .foot{border:1px solid var(--line);padding:.75rem 1rem}
+.site[data-style=blueprint] .foot::after{content:"SHEET 01/01 · REV. 2026" / "";margin-left:auto;letter-spacing:.1em;color:var(--accent)}
+
+/* ===== 10. Retro OS: escritorio de los 90, cada sección es una ventana ===== */
+.site[data-style=retro]{font-size:1rem;line-height:1.5}
+.site[data-style=retro] .inner{max-width:74rem;margin-inline:auto}
+.site[data-style=retro] .top{padding:.3rem .5rem;background:#C0C0C0;border:2px outset #e8e8e8}
+.site[data-style=retro] .name{padding:.2rem .6rem;border:2px outset #e8e8e8;font-weight:700}
+.site[data-style=retro] .name::before{content:"◧ " / ""}
+.site[data-style=retro] .prefs a,.site[data-style=retro] .style-btn,.site[data-style=retro] .btn{border:2px outset #e8e8e8;background:#C0C0C0;color:#000}
+.site[data-style=retro] .btn:active,.site[data-style=retro] .style-btn:active{border-style:inset;transform:none}
+.site[data-style=retro] .btn-primary{outline:1px solid #000;font-weight:700}
+.site[data-style=retro] .style-btn .sw{color:#fff}
+/* the Retro swatch keeps its teal background in every style: white text passes 4.5:1, black does not */
+.site .sw[data-style=retro]{color:#fff}
+.site[data-style=retro] .btn-link{border:0;background:transparent;color:var(--accent)}
+.site[data-style=retro] main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1.5rem;margin-top:2rem}
+.site[data-style=retro] main>section{margin-top:0;padding:3px 3px 1.1rem;background:#C0C0C0;border:2px outset #e8e8e8}
+.site[data-style=retro] main>section>*:not(h2):not(.kicker){margin-inline:1rem}
+.site[data-style=retro] h2,.site[data-style=retro] .kicker{display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;padding:.3rem .6rem;background:linear-gradient(90deg,#000080,#1084D0);color:#fff;font:700 1.15rem/1.3 var(--font-display)}
+.site[data-style=retro] h2::after,.site[data-style=retro] .kicker::after{content:"_ □ ×" / "";letter-spacing:.3em;font-weight:400}
+.site[data-style=retro] .hero{grid-column:1/9}
+.site[data-style=retro] .now{grid-column:9/-1;align-self:start;margin-top:4rem!important}
+.site[data-style=retro] .cases{grid-column:1/-1}
+.site[data-style=retro] .work{grid-column:1/9}
+.site[data-style=retro] .contact{grid-column:9/-1;align-self:start}
+.site[data-style=retro] h1{margin-block:1rem .5rem;font-size:clamp(2rem,4.5vw,3.4rem);font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.site[data-style=retro] h1 em{padding:0 .2em;font-style:normal;background:#000080;color:#fff}
+.site[data-style=retro] .shot{border:2px inset #e8e8e8}
+.site[data-style=retro] .timeline{background:#fff;border:2px inset #e8e8e8}
+.site[data-style=retro] .timeline li{padding:.4rem .6rem;border-top-color:#C0C0C0}
+.site[data-style=retro] .timeline .yr,.site[data-style=retro] .timeline .role{color:#000}
+.site[data-style=retro] h3 a{color:var(--accent);text-decoration:underline}
+.site[data-style=retro] .foot,.site[data-style=retro] .foot a{color:#fff;border-top-color:#ffffff80}
+.site[data-style=retro] :focus-visible{outline:2px dotted #000;outline-offset:2px}
+
+/* ===== página de caso de estudio ===== */
+.crumb{font-size:.95rem;color:var(--muted)}
+.crumb a{text-decoration:underline;text-underline-offset:.2em;color:var(--fg)}
+.site .hero .kicker{margin-top:1rem}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1rem var(--gap);margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--line)}
+.facts dt{font-size:.9rem;color:var(--muted)}
+.facts dd{margin:0;font-weight:600}
+.doc>p{max-width:65ch}
+.doc>h2+p,.doc p+p{margin-top:1rem}
+.doc>h2{margin-bottom:.25rem}
+.shot figcaption{margin-top:.6rem;font-size:.9rem;color:var(--muted)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);margin-top:1.25rem}
+.split h3{margin-bottom:.6rem}
+.split ul,.plain{display:grid;gap:.5rem}
+.split li,.plain li{max-width:60ch;padding-top:.5rem;border-top:1px solid var(--line)}
+.plain{margin-top:1rem}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.75rem;margin-top:1.25rem;counter-reset:step}
+.flow li{display:grid;align-content:start;gap:.35rem;padding:.9rem;border:1px solid var(--line);counter-increment:step}
+.flow li::before{content:counter(step) / "";font:700 1.5rem/1 var(--font-display);color:var(--accent)}
+.flow span{font-size:.92rem;color:var(--muted)}
+.table-wrap{margin-top:1.25rem;overflow-x:auto}
+.data{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.data th,.data td{padding:.75rem 1rem .75rem 0;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.data thead th{border-top:0;font-size:.9rem;font-weight:600;color:var(--muted)}
+.data tbody th{font-weight:700;min-width:11rem}
+.data td{min-width:12rem}
+.data-tight td{min-width:9rem}
+.data-tight tbody th{min-width:8.5rem}
+.data .num{min-width:0;white-space:nowrap;text-align:right;font-weight:600}
+.data code{font-size:.92em}
+
+/* colocación de las secciones nuevas en los estilos con rejilla */
+.site[data-style=swiss] .hero>.crumb,.site[data-style=swiss] .hero>.facts{grid-column:1/-1}
+.site[data-style=swiss] main>.doc{grid-column:1/-1;display:grid;grid-template-columns:subgrid}
+.site[data-style=swiss] main>.doc>*{grid-column:5/-1}
+.site[data-style=swiss] main>.doc>h2{grid-column:1/5}
+.site[data-style=swiss] .shot-wide{grid-column:1/-1!important}
+.site[data-style=noir] .doc{display:grid;grid-template-columns:subgrid;align-items:start}
+.site[data-style=noir] .doc>*{grid-column:2}
+.site[data-style=noir] .doc>h2{grid-column:1}
+.site[data-style=noir] .doc>.shot-wide{grid-column:1/-1}
+.site[data-style=brutal] main>.hero,.site[data-style=brutal] main>.doc{grid-column:1/-1}
+.site[data-style=retro] main>.hero,.site[data-style=retro] main>.doc,.site[data-style=retro] main>.contact{grid-column:1/-1}
+.site[data-style=retro] .data,.site[data-style=retro] .flow li{background:#fff}
+.site[data-style=retro] .data{border:2px inset #e8e8e8}
+.site[data-style=retro] .data th,.site[data-style=retro] .data td{padding-left:.6rem}
+.site[data-style=brutal] .data th,.site[data-style=brutal] .data td{border-top:2px solid #000}
+.site[data-style=brutal] .flow li{border:3px solid #000}
+.site[data-style=terminal] .data th,.site[data-style=terminal] .data td,.site[data-style=terminal] .flow li{border-style:dashed}
+.site[data-style=blueprint] .data th,.site[data-style=blueprint] .data td,.site[data-style=blueprint] .flow li{border-style:dashed}
+.site[data-style=riso] .flow li::before{color:var(--fg);text-shadow:.06em .05em 0 var(--accent)}
+.site[data-style=riso] .flow li:nth-child(odd){background:var(--tint)}
+.site[data-style=bauhaus] .flow li{border:2px solid var(--fg)}
+.site[data-style=bauhaus] .flow li:nth-child(3n+1)::before{color:var(--accent)}
+.site[data-style=bauhaus] .flow li:nth-child(3n+2)::before{color:var(--blue)}
+.site[data-style=bauhaus] .flow li:nth-child(3n)::before{color:var(--fg)}
+.site[data-style=deco] .facts,.site[data-style=deco] .crumb{text-align:center}
+.site[data-style=deco] .flow li{border-color:var(--accent)}
+@media (max-width:760px){
+  .split{grid-template-columns:1fr}
+  .site main>.doc{display:block!important}
+}
+
+.shots-app{margin-top:1.5rem}
+/* video del recorrido: capítulos como botones y transcripción a la vista */
+.tour{margin-top:1.5rem}
+.tour video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000}
+.chapters{display:flex;flex-wrap:wrap;gap:.25rem 1.25rem;margin-top:.9rem}
+.chapters button{min-height:2rem;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
+.chapters button:hover{text-underline-offset:.3em}
+.chapters .meta{font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.transcript{max-width:65ch;margin-top:.9rem}
+.transcript summary{font-weight:600;cursor:pointer}
+.transcript ol{display:grid;gap:.6rem;margin-top:.75rem}
+@media (max-width:760px){.chapters button,.transcript summary{min-height:44px}}
+.app-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.shot .app-row img{aspect-ratio:16/9}
+@media (max-width:760px){.app-row{grid-template-columns:1fr}}
+/* ===== móvil: una columna, mismas tres zonas, objetivos de 44 px ===== */
+@media (max-width:760px){
+  .site main,.site main>section,.site .hero,.site .inner,.site .cases ul,.site .case{display:block!important}
+  .site .case+.case{margin-top:var(--gap)}
+  .site .case-body{margin-top:1rem}
+  .site .timeline li{grid-template-columns:5rem 1fr!important}
+  .site .timeline .role{grid-column:2;text-align:left!important}
+  .top nav a,.prefs a,.style-btn{min-height:44px}
+  .picker{top:auto;bottom:0;left:0;right:0;width:100%;max-height:85vh}
+  .site[data-style=brutal] main>section{margin-top:1rem}
+  .site[data-style=retro] main>section{margin-top:1.5rem!important}
+  .site[data-style=bauhaus] .hero{min-height:0;padding-right:0}
+  .site[data-style=bauhaus] .hero::before,.site[data-style=bauhaus] .hero::after{display:none}
+}
+
+/* ===== movimiento: un solo cambio de 250 ms; sin movimiento si el sistema lo pide ===== */
+::view-transition-group(root){animation-duration:.25s;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+  .site *,.site *::before,.site *::after{transition:none!important;animation:none!important}
+}
+
+/* ===== impresión: neutra, sea cual sea el estilo ===== */
+@media print{
+  .prefs,.skip,.top nav,.picker,.shot{display:none!important}
+  .site{padding:0;background:#fff!important;color:#000!important;font:11pt/1.45 Georgia,serif!important}
+  .site *{color:#000!important;background:none!important;text-shadow:none!important;border-color:#000!important;transform:none!important}
+  .site *::before,.site *::after{content:none!important}
+}
+
+/* ===== página de arquitectura ===== */
+.toc{margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--line)}
+.toc h2{margin:0 0 .6rem;font-size:1rem}
+.toc ol{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.toc a{display:inline-block;min-height:24px;color:var(--fg);text-decoration:underline;text-underline-offset:.2em}
+.doc .sub{margin-top:2.25rem}
+.doc>.sub+p{margin-top:.75rem}
+.doc>.note{margin-top:.6rem;font-size:.9rem;color:var(--muted)}
+.split-3{grid-template-columns:repeat(3,1fr)}
+.arch{display:grid;gap:1.25rem;margin-top:1.25rem}
+.arch>li{position:relative;display:grid;grid-template-columns:10rem 1fr;gap:.75rem 1rem;align-items:start;padding:1rem;border:1px solid var(--line)}
+.arch>li+li::before{content:"\2193" / "";position:absolute;top:-1.3rem;left:50%;line-height:1.3rem;color:var(--muted)}
+.arch h3{margin:0;font-size:1rem}
+.arch ul{display:flex;flex-wrap:wrap;gap:.5rem}
+.arch ul li{display:grid;gap:.15rem;max-width:22rem;padding:.5rem .7rem;border:1px solid var(--line)}
+.arch small{font-size:.88rem;color:var(--muted)}
+.doc .plain a,.doc>p a{text-decoration:underline;text-underline-offset:.2em}
+@media (max-width:760px){.arch>li,.split-3{grid-template-columns:1fr}}
+</style>
+<noscript><style>.style-btn{display:none!important}</style></noscript>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How the platform is built, and why it's built that way.","description":"How one engineer built a union's platform: the architecture, the contract between five repos, CI/CD without a CI budget, and each trade-off.","url":"https://kerbero94.dev/architecture/","mainEntityOfPage":"https://kerbero94.dev/architecture/","image":"https://kerbero94.dev/og.png","inLanguage":"en","author":{"@type":"Person","@id":"https://kerbero94.dev/#me","name":"Eduardo González Zavala","url":"https://kerbero94.dev/"}}</script>
+</head>
+<body>
+
+
+<div class="site" id="site">
+<script>/* sin parpadeo: decide el estilo antes de pintar (URL > guardado > sistema) */
+(function(s){var k=['classic','swiss','noir','deco','brutal','bauhaus','riso','terminal','blueprint','retro'],q=new URLSearchParams(location.search).get('style'),v=null;try{v=localStorage.getItem('pf-style')}catch(e){}var c=k.indexOf(q)>-1?q:k.indexOf(v)>-1?v:'auto';s.dataset.choice=c;s.dataset.style=c!=='auto'?c:(matchMedia('(prefers-color-scheme: dark)').matches?'noir':'classic')})(document.currentScript.parentNode);
+</script>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="inner">
+    <header class="top">
+      <a class="name" href="/">Eduardo González</a>
+      <nav aria-label="Main"><ul>
+        <li><a href="/#work">Work</a></li>
+        <li><a href="/architecture/" aria-current="page">Architecture</a></li>
+      </ul></nav>
+      <div class="prefs">
+        <button type="button" class="style-btn" popovertarget="style-picker"><span class="sw" aria-hidden="true">Aa</span>Style<span class="vh">:</span> <span id="style-current" class="vh"></span></button>
+      </div>
+    </header>
+
+    <div id="style-picker" class="picker" popover role="dialog" aria-labelledby="picker-h">
+      <h2 id="picker-h">Choose a style</h2>
+      <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks and AAA color contrast.</p>
+      <fieldset>
+        <legend class="vh">Default</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="auto"><span class="sw sw-auto" aria-hidden="true"></span><span><b>Match my system</b><small>Light: New classic. Dark: Noir.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Quiet</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="classic"><span class="sw" data-style="classic" aria-hidden="true">Aa</span><span><b>New classic</b><small>A university-press book.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="swiss"><span class="sw" data-style="swiss" aria-hidden="true">Aa</span><span><b>Swiss</b><small>A 12-column poster grid.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="noir"><span class="sw" data-style="noir" aria-hidden="true">Aa</span><span><b>Noir</b><small>Dark, with one amber accent.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="deco"><span class="sw" data-style="deco" aria-hidden="true">Aa</span><span><b>Art Deco</b><small>Symmetry and gold.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Bold</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="brutal"><span class="sw" data-style="brutal" aria-hidden="true">Aa</span><span><b>Brutalism</b><small>Raw HTML, system fonts.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="bauhaus"><span class="sw" data-style="bauhaus" aria-hidden="true">Aa</span><span><b>Bauhaus</b><small>Primary colors and shapes.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="riso"><span class="sw" data-style="riso" aria-hidden="true">Aa</span><span><b>Risograph</b><small>A two-ink zine.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Interface</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="style" value="terminal"><span class="sw" data-style="terminal" aria-hidden="true">Aa</span><span><b>Terminal</b><small>A VT100 manual.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="blueprint"><span class="sw" data-style="blueprint" aria-hidden="true">Aa</span><span><b>Blueprint</b><small>An architect's drawing.</small></span></label>
+          <label class="opt"><input type="radio" name="style" value="retro"><span class="sw" data-style="retro" aria-hidden="true">Aa</span><span><b>Retro OS</b><small>A 90s desktop.</small></span></label>
+        </div>
+      </fieldset>
+    </div>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="h-hero">
+        <p class="crumb"><a href="/#work">Work</a> <span aria-hidden="true">/</span> Architecture</p>
+        <p class="kicker">System design · SITIMM platform, November 2026</p>
+        <h1 id="h-hero">How the platform is built, and <em>why</em> it's built that way.</h1>
+        <p class="lede">Five repositories, four surfaces, one engineer. This page is for the technical reviewer: the system, the contracts between its parts, how a change reaches production, and the trade-offs I chose, with what each one cost.</p>
+        <dl class="facts">
+          <div><dt>Scale</dt><dd>70,000 members, 170 companies, 8 languages</dd></div>
+          <div><dt>Surfaces</dt><dd>Next.js website, React Native app on iOS and Android, React admin panel, FastAPI API</dd></div>
+          <div><dt>Throughput</dt><dd>668 pull requests merged in October 2026, across five repos</dd></div>
+          <div><dt>CI spend</dt><dd>0 GitHub Actions minutes since 28 Sep 2026; the same checks run before every push</dd></div>
+          <div><dt>Deploys</dt><dd>API as a container image per commit; web and panel on Netlify; the app through both stores</dd></div>
+          <div><dt>Decisions on record</dt><dd>30 decision records for the admin panel alone</dd></div>
+        </dl>
+        <nav class="toc" aria-labelledby="h-toc">
+          <h2 id="h-toc">On this page</h2>
+          <ol>
+            <li><a href="#h-system">The system</a></li>
+            <li><a href="#h-contract">Five repos, one contract</a></li>
+            <li><a href="#h-fe">Frontend architecture</a></li>
+            <li><a href="#h-ci">Shipping without paid CI</a></li>
+            <li><a href="#h-decisions">How I make decisions</a></li>
+            <li><a href="#h-value">What experience bought</a></li>
+            <li><a href="#h-site">How this site is built and tested</a></li>
+          </ol>
+        </nav>
+      </section>
+
+      <section class="doc" aria-labelledby="h-system">
+        <h2 id="h-system">The system</h2>
+        <p>One API serves three frontends. Everything server-side runs in Docker on a single VPS: infrastructure one person can operate, and the union can pay for.</p>
+        <ol class="arch" aria-label="Layers of the platform, from the people who use it down to the data">
+          <li>
+            <h3>Clients</h3>
+            <ul>
+              <li><b>Website</b><small>Next.js 16, React Server Components, 8 locales</small></li>
+              <li><b>Mobile app</b><small>Expo, React Native New Architecture, iOS and Android</small></li>
+              <li><b>Admin panel</b><small>React 19 single-page app on Vite</small></li>
+            </ul>
+          </li>
+          <li>
+            <h3>Delivery</h3>
+            <ul>
+              <li><b>Netlify</b><small>Website and panel, a preview per pull request</small></li>
+              <li><b>App Store and Google Play</b><small>Native builds, made by hand</small></li>
+            </ul>
+          </li>
+          <li>
+            <h3>API</h3>
+            <ul>
+              <li><b>FastAPI, async</b><small>REST v2, with legacy v1 being retired</small></li>
+              <li><b>Socket.IO</b><small>Live chat between members and their advisors</small></li>
+            </ul>
+          </li>
+          <li>
+            <h3>Background work</h3>
+            <ul>
+              <li><b>Celery workers</b><small>Separate queues: membership imports at three priorities, media ingest</small></li>
+              <li><b>Scheduler</b><small>Recurring and delayed jobs</small></li>
+            </ul>
+          </li>
+          <li>
+            <h3>Data</h3>
+            <ul>
+              <li><b>PostgreSQL with pgvector</b><small>Records, plus search for the AI assistant</small></li>
+              <li><b>Redis</b><small>Cache, queue broker, rate limits, socket fan-out</small></li>
+              <li><b>Object storage</b><small>S3-compatible, for media and documents</small></li>
+            </ul>
+          </li>
+          <li>
+            <h3>Outside services</h3>
+            <ul>
+              <li><b>Firebase Cloud Messaging</b><small>Push notifications</small></li>
+              <li><b>WhatsApp</b><small>The publishing bot</small></li>
+              <li><b>LLM and translation APIs</b><small>The assistant, post drafts, 8 languages</small></li>
+              <li><b>Sentry</b><small>Errors on every surface</small></li>
+            </ul>
+          </li>
+        </ol>
+        <h3 class="sub">Why it looks like this</h3>
+        <ul class="plain">
+          <li><b>Business rules live once, in the API.</b> The frontends render and cache; they don't decide who can see what.</li>
+          <li><b>Postgres does more than store rows.</b> When the assistant needed search, I added pgvector to the database we already ran instead of a new service to operate. <a href="/sitimmvito/">The search case</a> has the details.</li>
+          <li><b>The cost is a single machine.</b> One VPS is one point of failure, and the CI runner I once put on it competed with production. That story is <a href="#h-ci">below</a>.</li>
+        </ul>
+      </section>
+
+      <section class="doc" aria-labelledby="h-contract">
+        <h2 id="h-contract">Five repos, one contract</h2>
+        <p>I kept the API, website, app, panel and shared types in separate repositories, not a monorepo. Each surface ships on its own clock: the website in minutes, the app after store review. What holds them together is the contract.</p>
+        <ol class="flow">
+          <li><b>Pydantic models</b><span>The API's schemas are the source of truth for every request and response.</span></li>
+          <li><b>JSON Schema bundle</b><span>A script dumps every model into one deterministic, byte-stable file. A test fails when it's stale.</span></li>
+          <li><b>Shared types package</b><span>A versioned npm package with the v2 shapes, endpoints, socket event names and roles.</span></li>
+          <li><b>Three frontends</b><span>Website, app and panel import the same types, so a breaking change shows up as a type error.</span></li>
+        </ol>
+        <h3 class="sub">Retiring the legacy API without a rewrite</h3>
+        <p>The union inherited a legacy backend and couldn't go dark while I replaced it. So v2 grows beside v1, and v1 can only shrink: its endpoints are frozen in an inventory, and a test fails if one is added. On the website, features live in <code>v1/</code> and <code>v2/</code> folders side by side behind one feature flag; the old folder is deleted once its migration is done.</p>
+        <h3 class="sub">What it costs</h3>
+        <ul class="plain">
+          <li><b>Version skew.</b> The package is at 4.0 while the three frontends pin 2.69 to 2.74. A new major is adopted one surface at a time, on purpose, so a contract change never lands everywhere on the same day.</li>
+          <li><b>Types are mirrored by hand.</b> The TypeScript package follows the schema bundle through a runbook, not a generator. That's the next thing I'd automate.</li>
+        </ul>
+      </section>
+
+      <section class="doc" aria-labelledby="h-fe">
+        <h2 id="h-fe">Frontend architecture</h2>
+        <p>Three React codebases with different jobs, so three different answers to the same questions: where state lives, how data is fetched, and what happens offline.</p>
+        <div class="split split-3">
+          <div>
+            <h3>Website</h3>
+            <ul>
+              <li>Next.js App Router with React Server Components. No Redux or Zustand: Server Components and per-fetch caching cover most data flows.</li>
+              <li>Feature-sliced layers, with the import direction enforced by ESLint: app, features, shared, infrastructure, lib. Features reach each other only through their public entry point.</li>
+              <li>Eight locales through next-intl, with translation keys type-checked at build time.</li>
+              <li>Accessibility is enforced by lint rules and typed components. <a href="/accessibility/">The accessibility case</a> shows how.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Mobile app</h3>
+            <ul>
+              <li>Expo with generated native projects: the <code>ios/</code> and <code>android/</code> folders come from config, not from commits. New Architecture, Hermes and the React Compiler.</li>
+              <li>RTK Query for data. The socket only receives; every write goes over HTTP, and server events patch the cache.</li>
+              <li>Offline first: failed writes wait in an encrypted queue and replay on reconnect, only for the account that made them. Sign-in and personal-data writes are never queued.</li>
+              <li>Tokens live in the OS keystore, and personal data is stripped before state is saved to disk.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Admin panel</h3>
+            <ul>
+              <li>A React 19 single-page app on Vite. API endpoints are injected per feature into a few RTK Query slices.</li>
+              <li>One shared lock for token refresh, so parallel 401s trigger a single refresh. Only idempotent requests are retried.</li>
+              <li>Its own design system, Clay: tokens and components with the same API in every screen.</li>
+              <li>Rebuilt screen by screen. Each screen gets a decision record that describes what exists before anything changes.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc" aria-labelledby="h-ci">
+        <h2 id="h-ci">Shipping without paid CI</h2>
+        <p>The pipeline I run today wasn't the plan. It's what was left after volume outgrew the budget. I kept the rigor and moved where it runs.</p>
+        <ol class="flow">
+          <li><b>Hybrid CI</b><span>Until mid-2026: GitHub-hosted runners for the frontends, a self-hosted runner for the API, cloud builds on top.</span></li>
+          <li><b>Volume jumps</b><span>Merged pull requests went from 114 in June to 544 in July. Workflow runs went from 752 to 3,140.</span></li>
+          <li><b>The budget runs out</b><span>The monthly Actions budget ran out partway through each month. Jobs were refused without running a step, and new features waited for the next billing cycle.</span></li>
+          <li><b>The runner fights production</b><span>The API's runner lived on the production VPS, with 2 vCPUs. One CI run sat queued for 14 h 44 min.</span></li>
+          <li><b>Decision</b><span>28 Sep 2026: Actions off in all five repos. Every check moves to the pre-push hook. One workflow stays: the API deploy, which spends no minutes.</span></li>
+        </ol>
+        <section class="table-wrap" aria-labelledby="h-volume" tabindex="0">
+          <table class="data data-tight">
+            <caption id="h-volume">Merged pull requests and GitHub Actions runs per month, all five repos</caption>
+            <thead><tr><th scope="col">Month, 2026</th><th scope="col" class="num">Merged pull requests</th><th scope="col" class="num">Actions runs</th><th scope="col">What ran</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">June</th><td class="num">114</td><td class="num">752</td><td>Hybrid CI</td></tr>
+              <tr><th scope="row">July</th><td class="num">544</td><td class="num">3,140</td><td>Budget runs out; most runs refused</td></tr>
+              <tr><th scope="row">August</th><td class="num">327</td><td class="num">2,035</td><td>Same; the API's runner leaves production</td></tr>
+              <tr><th scope="row">September</th><td class="num">257</td><td class="num">1,264</td><td>Actions turned off on the 28th</td></tr>
+              <tr><th scope="row">October</th><td class="num">668</td><td class="num">165</td><td>Local checks; Actions only for API deploys and dependency updates</td></tr>
+              <tr><th scope="row">November, to the 23rd</th><td class="num">445</td><td class="num">118</td><td>Same</td></tr>
+            </tbody>
+          </table>
+        </section>
+        <p class="note">Counted from the GitHub API on 23 Nov 2026. A run that was refused for budget still counts as a run.</p>
+
+        <h3 class="sub">The incident that shaped the deploy</h3>
+        <p>That 14-hour queue finished on 29 Jul 2026. The deploy workflow fired three seconds later and built a commit five behind main, then tried to put it on production. A database migration refused it, by luck rather than design. Since then, a guard compares the commit against the real head of main and skips any deploy that's been overtaken. Skipped, not failed: a red mark for a correct outcome teaches people to ignore red marks.</p>
+
+        <h3 class="sub">What runs before every push</h3>
+        <section class="table-wrap" aria-labelledby="h-gates" tabindex="0">
+          <table class="data">
+            <caption id="h-gates" class="vh">The local checks each repository runs before a push</caption>
+            <thead><tr><th scope="col">Repo</th><th scope="col">Checks</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">API</th><td>Formatting, Ruff, isort, mypy, an access-control check on company-scoped endpoints, the full pytest suite in parallel, and the contract-freshness test. About 7 minutes. Secrets and Bandit scans on commit.</td></tr>
+              <tr><th scope="row">Website</th><td>Types for the app and for its tests, ESLint with zero warnings, Vitest, a dependency audit, and validation of the end-to-end config.</td></tr>
+              <tr><th scope="row">Admin panel</th><td>Seven steps: ESLint, types, formatting, quality rules on touched files, the unit tests related to the diff, a production build, and security and translation checks. It refuses to push uncommitted work and leaves a receipt.</td></tr>
+              <tr><th scope="row">App</th><td>Module boundaries, dependency and audit checks, coverage of changed lines, docs, and the v2 contract invariants.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <h3 class="sub">How each surface deploys</h3>
+        <ul class="plain">
+          <li><b>API.</b> A manual dispatch builds a container image tagged with the commit, pushes it to the GitHub registry, and a self-hosted runner deploys it and runs the Alembic migrations. One deploy at a time, never cancelled midway. Rolling back means deploying an older tag.</li>
+          <li><b>Website and panel.</b> Netlify builds main, with a preview for every pull request.</li>
+          <li><b>App.</b> Built by hand on the laptop. QA installs it over the published version, with real data, before it goes to the stores.</li>
+        </ul>
+
+        <h3 class="sub">What I gave up, and what covers it</h3>
+        <section class="table-wrap" aria-labelledby="h-tradeoffs" tabindex="0">
+          <table class="data">
+            <caption id="h-tradeoffs" class="vh">Trade-offs of moving CI to the laptop</caption>
+            <thead><tr><th scope="col">Given up</th><th scope="col">Why it's acceptable here</th><th scope="col">What covers it</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">A clean, neutral build machine</th><td>The agents write the code on this same machine anyway.</td><td>A real install in every worktree, a check that the hooks exist, a production build inside the gate.</td></tr>
+              <tr><th scope="row">Checks visible on each pull request</th><td>I'm the only person who merges.</td><td>The gate leaves a receipt, and the reviewing model reports what it actually read.</td></tr>
+              <tr><th scope="row">Parallel CI capacity</th><td>Five or six agent sessions already share the laptop.</td><td>A machine-wide lock runs one heavy job at a time, after a memory check.</td></tr>
+              <tr><th scope="row">Required status checks on main</th><td>Private repos on a free plan can't enforce them anyway.</td><td>Only I merge, after the local gate and a second model's review.</td></tr>
+            </tbody>
+          </table>
+        </section>
+        <p>When a second engineer joins, or the budget comes back, CI returns first for the API, the riskiest repo. It would run the same command as the laptop, so the two can't drift.</p>
+      </section>
+
+      <section class="doc" aria-labelledby="h-decisions">
+        <h2 id="h-decisions">How I make decisions</h2>
+        <p>Each decision gets the same five questions: what forced it, what else I considered, what I chose, what it costs, and what would make me change it.</p>
+        <section class="table-wrap" aria-labelledby="h-decisions-table" tabindex="0">
+          <table class="data">
+            <caption id="h-decisions-table" class="vh">Architecture decisions, the alternatives, their cost and when to revisit them</caption>
+            <thead><tr><th scope="col">Decision</th><th scope="col">Instead of</th><th scope="col">What it costs</th><th scope="col">I'd revisit when</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Checks before push, Actions off</th><td>Paying for more minutes, or cutting checks</td><td>One machine is the build farm</td><td>A second engineer or a CI budget</td></tr>
+              <tr><th scope="row">Search inside Postgres with pgvector</th><td>A separate vector database</td><td>Tuning by hand, in SQL</td><td>Search load starts to slow writes</td></tr>
+              <tr><th scope="row">Separate repos and a versioned types package</th><td>A monorepo</td><td>Version skew between surfaces</td><td>Skew causes a production bug</td></tr>
+              <tr><th scope="row">v2 beside v1, v1 can only shrink</th><td>A rewrite and a cut-over date</td><td>Two backends live; the app talks to both</td><td>The v1 inventory reaches zero</td></tr>
+              <tr><th scope="row">One VPS with Docker</th><td>Managed cloud services</td><td>A single point of failure</td><td>Uptime needs outgrow one machine</td></tr>
+              <tr><th scope="row">Native builds by hand</th><td>Paid cloud builds</td><td>Laptop time and manual signing per release</td><td>Releases get more frequent than weekly</td></tr>
+              <tr><th scope="row">Socket receives, HTTP writes</th><td>Writes over the socket</td><td>A second connection for live chat</td><td>HTTP round-trips become the chat bottleneck</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </section>
+
+      <section class="doc" aria-labelledby="h-value">
+        <h2 id="h-value">What experience bought</h2>
+        <p>The agents write most of the code. Eight years of building frontends is what decides which code is worth writing, and what has to hold when the budget doesn't.</p>
+        <ul class="plain">
+          <li><b>Knowing what not to cut.</b> When CI money ran out, the checks moved to the laptop. None of them were dropped.</li>
+          <li><b>Measuring before deciding.</b> The CI decision came with run counts, queue times and a near-miss deploy, not with a feeling.</li>
+          <li><b>Picking boring technology one person can run.</b> Postgres, Redis, Docker and one VPS. Nothing that needs a team on call.</li>
+          <li><b>Writing the reason down.</b> Decision records and guardrails mean every agent session, and the next engineer, starts from the why.</li>
+        </ul>
+        <h3 class="sub">What I'd do differently</h3>
+        <ul class="plain">
+          <li>Set a spending alert before the first cutoff, not after it.</li>
+          <li>Generate the TypeScript types from the schema bundle from day one.</li>
+          <li>Never put a CI runner on the production machine, even for a week.</li>
+        </ul>
+      </section>
+
+      <section class="doc" aria-labelledby="h-site">
+        <h2 id="h-site">How this site is built and tested</h2>
+        <p>The same discipline, at the scale of one portfolio. Static HTML with no framework, ten visual styles from one semantic document. Every change goes through a pull request and one gate, and the same gate runs again on exactly what ships before each deploy. The <a href="https://github.com/kerbero1994/kerbero94.dev">source and tests</a> and <a href="https://github.com/kerbero1994/kerbero94.dev/actions">every CI run</a> are public.</p>
+        <section class="table-wrap" aria-labelledby="h-site-table" tabindex="0">
+          <table class="data">
+            <caption id="h-site-table" class="vh">What the gate checks on every change to this site</caption>
+            <thead><tr><th scope="col">Layer</th><th scope="col">What has to hold</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Accessibility</th><td>WCAG 2.2 AA with axe on every page in all ten styles, and AAA color contrast (7:1) in every one. Reflow at 320 px, a visible focus ring in every style, reduced motion, Windows high contrast.</td></tr>
+              <tr><th scope="row">End to end</th><td>Playwright in Chrome, Firefox, and WebKit (Safari's engine) on an iPhone profile. Any console error or CSP violation fails the run. The site also works without JavaScript.</td></tr>
+              <tr><th scope="row">Visual regression</th><td>57 screens compared against reviewed baselines.</td></tr>
+              <tr><th scope="row">Performance</th><td>Lighthouse on mobile and desktop for every page: performance 95 or more, every other category 100, LCP under 2.5 s, layout shift under 0.1, 800 KB per page at most. Below that, the merge is blocked.</td></tr>
+              <tr><th scope="row">Security</th><td>A Content Security Policy with no <code>unsafe-inline</code>: each inline script and style is allowed by its hash. HSTS, self-hosted fonts, no cookies, and a secrets scan over the whole history.</td></tr>
+              <tr><th scope="row">Content</th><td>Valid HTML, structured data, and a spell check on everything a visitor reads or hears.</td></tr>
+            </tbody>
+          </table>
+        </section>
+        <h3 class="sub">One thing it caught</h3>
+        <p>Lighthouse measured a layout shift of 0.22 on every page. At 412 px wide, a common Android width, the header fit one more item on its first row with the fallback font than with Bodoni, which is 14 px wider. So it re-wrapped when the font arrived and pushed the page down 22 px. Pinning the header layout on narrow screens brought the shift under 0.05 and performance from 88 to 99, and the budget that found it now blocks any change that brings it back.</p>
+        <p class="note">Production is watched too: a daily smoke test and security-header grade, and Lighthouse against the live site every week.</p>
+      </section>
+
+      <section class="contact" aria-labelledby="h-contact">
+        <h2 id="h-contact">Want to go deeper?</h2>
+        <p>I'm happy to walk through any of these decisions, including the ones I'd make differently now.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="mailto:eduardo@kerbero94.dev">Email me</a>
+          <a class="btn" href="/eduardo-gonzalez-cv.pdf" type="application/pdf">Résumé <span class="meta">PDF, 86&nbsp;KB</span></a>
+          <a class="btn btn-link" href="/sitimm/">The SITIMM case: how the agents work</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <a href="https://www.linkedin.com/in/eduglezzvl94">LinkedIn</a><a href="https://github.com/kerbero1994">GitHub</a><a href="https://github.com/kerbero1994/kerbero94.dev">Source</a><span>© 2026 Eduardo González</span>
+    </footer>
+  </div>
+  <p class="vh" id="style-status" aria-live="polite"></p>
+</div>
+
+<script>
+(function(){
+  const NAMES={classic:'New classic',swiss:'Swiss',noir:'Noir',deco:'Art Deco',brutal:'Brutalism',bauhaus:'Bauhaus',riso:'Risograph',terminal:'Terminal',blueprint:'Blueprint',retro:'Retro OS'};
+  const site=document.getElementById('site');
+  const dark=matchMedia('(prefers-color-scheme: dark)');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+  const sysStyle=()=>dark.matches?'noir':'classic';
+  const meta=document.getElementById('theme-color');
+
+  function paint(style,choice){
+    site.dataset.style=style;site.dataset.choice=choice;
+    document.getElementById('style-current').textContent=NAMES[style];
+    site.querySelectorAll('input[name=style]').forEach(r=>{r.checked=r.value===choice});
+    meta.content=document.documentElement.style.background=getComputedStyle(site).getPropertyValue('--bg').trim();
+  }
+  function choose(choice){
+    const style=choice==='auto'?sysStyle():choice;
+    try{choice==='auto'?localStorage.removeItem('pf-style'):localStorage.setItem('pf-style',choice)}catch(e){}
+    const u=new URL(location.href);
+    choice==='auto'?u.searchParams.delete('style'):u.searchParams.set('style',choice);
+    history.replaceState(null,'',u);
+    const run=()=>paint(style,choice);
+    document.startViewTransition&&!reduce.matches?document.startViewTransition(run):run();
+    document.getElementById('style-status').textContent='Style: '+NAMES[style]+(choice==='auto'?' (matches your system)':'');
+  }
+  paint(site.dataset.style,site.dataset.choice);
+  site.querySelectorAll('input[name=style]').forEach(r=>r.addEventListener('change',()=>choose(r.value)));
+  dark.addEventListener('change',()=>{if(site.dataset.choice==='auto')paint(sysStyle(),'auto')});
+
+})();
+</script>
+<script>
+document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',async()=>{
+  const v=document.querySelector('.tour video');
+  v.currentTime=+b.dataset.seek;v.play();
+}));
+</script>
+</body>
+</html>

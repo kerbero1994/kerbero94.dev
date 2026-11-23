@@ -1,5 +1,9 @@
 .DS_Store
-node_modules/
+.lighthouseci/
 .netlify/
 checks/result.json
 cv/*.pdf
+node_modules/
+playwright-report/
+results/
+test-results/

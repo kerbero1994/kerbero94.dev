@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dt9MPSFOaBdUE/IThTJ4Xro80HcbS2q+XplWOJRxnb8=' 'sha256-cdQm1cFNSuB0WILTgRg6WzEPDkmcPiY7JcRIg8r8BVU=' 'sha256-sNuC33YpqIpvzkRhjpLUpteFsXgLPVAMbB6S2A2YOqw=' 'sha256-zQkLt72L+STQwrCchVBq4QeHFPY0sCWtrM2gSAPhIkY=' https://static.cloudflareinsights.com; style-src 'self' 'sha256-GpUwtd5eNz8kYJvrVO5/NxeAHTGyhtXv7hylcn7i8HE=' 'sha256-W+Xal1iCBcfR2U6s0PpsCXFa4DPaQqLbUcEBbjf37VQ=' 'sha256-r17YnH6cp5jjL/9oGRvNsvYJCc0/V2NnOyKDVHfNveQ=' 'sha256-tr23av5UzdLaU6vMUButUewVDNMEBeqapxT/4qGKR2w=' 'sha256-vu+JxNFaqh2zVTO+08wyfX9+jGNhTRoKNWZbOnq2F40='; img-src 'self' data:; font-src 'self'; media-src 'self'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" id="theme-color" content="#FBF9F9">
 <title>SitimmVito search case study: Eduardo González</title>
@@ -17,10 +18,29 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Atkinson+Hyperlegible+Next:wght@400;700&family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Schibsted+Grotesk:wght@400;600;700&family=Gloock&family=Albert+Sans:wght@400;600&family=Aboreto&family=Josefin+Sans:wght@400;600&family=Jost:wght@400;500;700&family=Archivo+Black&family=Courier+Prime:wght@400;700&family=VT323&family=Architects+Daughter&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/bodoni-moda.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: light)">
+<link rel="preload" href="/fonts/bodoni-moda-italic.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: light)">
+<link rel="preload" href="/fonts/atkinson-hyperlegible-next.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: light)">
+<link rel="preload" href="/fonts/gloock.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: dark)">
+<link rel="preload" href="/fonts/albert-sans.woff2" as="font" type="font/woff2" crossorigin media="(prefers-color-scheme: dark)">
 <style>
+/* Self-hosted fonts (SIL OFL 1.1, latin subset from Google Fonts): no third-party request, nothing render-blocking. */
+@font-face{font-family:"Aboreto";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/aboreto.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Albert Sans";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/albert-sans.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Architects Daughter";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/architects-daughter.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Archivo Black";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/archivo-black.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Atkinson Hyperlegible Mono";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/atkinson-hyperlegible-mono.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Atkinson Hyperlegible Next";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/atkinson-hyperlegible-next.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Bodoni Moda";font-style:italic;font-weight:400 700;font-display:swap;src:url(/fonts/bodoni-moda-italic.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Bodoni Moda";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/bodoni-moda.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/courier-prime-400.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Courier Prime";font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/courier-prime-700.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Gloock";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/gloock.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Josefin Sans";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/josefin-sans.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Jost";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/jost.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Martian Mono";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/martian-mono.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Schibsted Grotesk";font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/schibsted-grotesk.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"VT323";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/vt323.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0}
 
@@ -52,6 +72,9 @@ html,body{margin:0}
 /* encabezado: tres zonas fijas en todos los estilos (nombre · navegación · preferencias) */
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 2rem}
 .top .name{margin-right:auto;text-decoration:none}
+/* Under 560px the name gets its own row whatever the font: Bodoni is 14px wider than the
+   fallback, so the row used to re-wrap when it arrived and pushed main down (CLS 0.22). */
+@media (max-width:560px){.top .name{flex-basis:100%}}
 .top nav ul{display:flex;gap:.25rem 1.25rem}
 .top nav a{display:inline-flex;align-items:center;min-height:40px;text-decoration:none}
 .top nav a:hover,.top nav a[aria-current]{text-decoration:underline;text-underline-offset:.3em}
@@ -122,15 +145,15 @@ html,body{margin:0}
 
 /* ===== tokens por estilo (también los usa la miniatura del selector) ===== */
 [data-style=classic]{--bg:#FBF9F9;--fg:#1C1718;--muted:#5A5254;--accent:#8A2432;--accent-ink:#fff;--line:#1C171826;--font-display:"Bodoni Moda",serif;--font-body:"Atkinson Hyperlegible Next",sans-serif}
-[data-style=swiss]{--bg:#FFFFFF;--fg:#111111;--muted:#4D4D4D;--accent:#D0021B;--accent-ink:#fff;--line:#111;--font-display:"Schibsted Grotesk",sans-serif;--font-body:"Schibsted Grotesk",sans-serif}
+[data-style=swiss]{--bg:#FFFFFF;--fg:#111111;--muted:#4D4D4D;--accent:#B40217;--accent-ink:#fff;--line:#111;--font-display:"Schibsted Grotesk",sans-serif;--font-body:"Schibsted Grotesk",sans-serif}
 [data-style=noir]{--bg:#0C0C0D;--fg:#ECE8E1;--muted:#B3AEA6;--accent:#F0A63A;--accent-ink:#0C0C0D;--line:#2E2C29;--font-display:Gloock,serif;--font-body:"Albert Sans",sans-serif}
 [data-style=deco]{--bg:#0F1F1C;--fg:#EFE6D2;--muted:#CFC2A3;--accent:#D9B46A;--accent-ink:#0F1F1C;--line:#D9B46A59;--font-display:Aboreto,serif;--font-body:"Josefin Sans",sans-serif}
 [data-style=brutal]{--bg:#E8E8E3;--fg:#000;--muted:#000;--accent:#0000EE;--accent-ink:#fff;--line:#000;--focus:#000;--font-display:Arial,"Helvetica Neue",Helvetica,sans-serif;--font-body:"Times New Roman",Times,serif}
-[data-style=bauhaus]{--bg:#F2F3F5;--fg:#141414;--muted:#3A3A3A;--accent:#C8281E;--accent-ink:#fff;--blue:#1E4FA3;--yellow:#F2B705;--line:#141414;--font-display:Jost,sans-serif;--font-body:Jost,sans-serif}
+[data-style=bauhaus]{--bg:#F2F3F5;--fg:#141414;--muted:#3A3A3A;--accent:#AB221A;--accent-ink:#fff;--blue:#1E4EA1;--yellow:#F2B705;--line:#141414;--font-display:Jost,sans-serif;--font-body:Jost,sans-serif}
 [data-style=riso]{--bg:#F7F6F6;--fg:#22306A;--muted:#33427E;--accent:#FF48B0;--accent-ink:#22306A;--tint:#FFC2E0;--line:#22306A;--font-display:"Archivo Black",sans-serif;--font-body:"Courier Prime",monospace}
 [data-style=terminal]{--bg:#0B0F0B;--fg:#A9F5A0;--muted:#7FCF77;--accent:#FFB000;--accent-ink:#0B0F0B;--line:#2A3F2A;--font-display:VT323,monospace;--font-body:"Atkinson Hyperlegible Mono",monospace}
 [data-style=blueprint]{--bg:#123F7C;--fg:#F4F7FF;--muted:#C9D8F2;--accent:#FFD866;--accent-ink:#123F7C;--line:#F4F7FF80;--font-display:"Architects Daughter",cursive;--font-body:"Martian Mono",monospace}
-[data-style=retro]{--bg:#007373;--fg:#000;--muted:#1A1A1A;--accent:#000080;--accent-ink:#fff;--line:#808080;--focus:#000;--font-display:Verdana,Tahoma,sans-serif;--font-body:Verdana,Tahoma,sans-serif}
+[data-style=retro]{--bg:#006363;--fg:#000;--muted:#1A1A1A;--accent:#000080;--accent-ink:#fff;--line:#808080;--focus:#000;--font-display:Verdana,Tahoma,sans-serif;--font-body:Verdana,Tahoma,sans-serif}
 
 /* ===== 1. New classic: libro de imprenta universitaria, no revista ===== */
 .site[data-style=classic]{font-size:1.125rem;line-height:1.65}
@@ -339,6 +362,8 @@ html,body{margin:0}
 .site[data-style=retro] .btn:active,.site[data-style=retro] .style-btn:active{border-style:inset;transform:none}
 .site[data-style=retro] .btn-primary{outline:1px solid #000;font-weight:700}
 .site[data-style=retro] .style-btn .sw{color:#fff}
+/* the Retro swatch keeps its teal background in every style: white text passes 4.5:1, black does not */
+.site .sw[data-style=retro]{color:#fff}
 .site[data-style=retro] .btn-link{border:0;background:transparent;color:var(--accent)}
 .site[data-style=retro] main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1.5rem;margin-top:2rem}
 .site[data-style=retro] main>section{margin-top:0;padding:3px 3px 1.1rem;background:#C0C0C0;border:2px outset #e8e8e8}
@@ -468,6 +493,8 @@ html,body{margin:0}
   .site *::before,.site *::after{content:none!important}
 }
 </style>
+<noscript><style>.style-btn{display:none!important}</style></noscript>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Teaching an assistant to find the right answer.","description":"An outage on a Saturday, and by Sunday the app's assistant searched everything the union publishes, inside the Postgres it already had.","url":"https://kerbero94.dev/sitimmvito/","mainEntityOfPage":"https://kerbero94.dev/sitimmvito/","image":"https://kerbero94.dev/og.png","inLanguage":"en","author":{"@type":"Person","@id":"https://kerbero94.dev/#me","name":"Eduardo González Zavala","url":"https://kerbero94.dev/"}}</script>
 </head>
 <body>
 
@@ -482,15 +509,16 @@ html,body{margin:0}
       <a class="name" href="/">Eduardo González</a>
       <nav aria-label="Main"><ul>
         <li><a href="/#work" aria-current="page">Work</a></li>
+        <li><a href="/architecture/">Architecture</a></li>
       </ul></nav>
       <div class="prefs">
         <button type="button" class="style-btn" popovertarget="style-picker"><span class="sw" aria-hidden="true">Aa</span>Style<span class="vh">:</span> <span id="style-current" class="vh"></span></button>
       </div>
     </header>
 
-    <div id="style-picker" class="picker" popover aria-labelledby="picker-h">
+    <div id="style-picker" class="picker" popover role="dialog" aria-labelledby="picker-h">
       <h2 id="picker-h">Choose a style</h2>
-      <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks.</p>
+      <p class="picker-note">Same content in ten visual styles. Every one passes automated WCAG 2.2 AA checks and AAA color contrast.</p>
       <fieldset>
         <legend class="vh">Default</legend>
         <div class="opts">
@@ -523,7 +551,6 @@ html,body{margin:0}
         </div>
       </fieldset>
     </div>
-    <noscript><style>.style-btn{display:none!important}</style></noscript>
 
     <main id="main">
       <section class="hero" aria-labelledby="h-hero">
@@ -541,7 +568,7 @@ html,body{margin:0}
 
       <section class="doc" aria-labelledby="h-shot">
         <h2 id="h-shot" class="vh">Screen</h2>
-        <figure class="shot shot-wide"><img src="/img/app-sitimmvito.jpg" width="1920" height="1080" alt="SitimmVito, the app's AI assistant, answering a question about member discounts.">
+        <figure class="shot shot-wide"><picture><source type="image/avif" srcset="/img/app-sitimmvito-480.avif 480w, /img/app-sitimmvito-800.avif 800w, /img/app-sitimmvito-1200.avif 1200w, /img/app-sitimmvito-1600.avif 1600w, /img/app-sitimmvito-1920.avif 1920w" sizes="(max-width: 760px) calc(100vw - 40px), calc(100vw - 100px)"><source type="image/webp" srcset="/img/app-sitimmvito-480.webp 480w, /img/app-sitimmvito-800.webp 800w, /img/app-sitimmvito-1200.webp 1200w, /img/app-sitimmvito-1600.webp 1600w, /img/app-sitimmvito-1920.webp 1920w" sizes="(max-width: 760px) calc(100vw - 40px), calc(100vw - 100px)"><img src="/img/app-sitimmvito.jpg" width="1920" height="1080" alt="SitimmVito, the app's AI assistant, answering a question about member discounts." decoding="async"></picture>
           <figcaption>SitimmVito in the app, from the launch video. The member is a test account.</figcaption>
         </figure>
       </section>
@@ -567,9 +594,9 @@ html,body{margin:0}
 
       <section class="doc" aria-labelledby="h-wrong">
         <h2 id="h-wrong">Five ways it was wrong</h2>
-        <div class="table-wrap" role="region" aria-labelledby="h-wrong" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-wrong-table" tabindex="0">
           <table class="data">
-            <caption class="vh">Search failures, the cause of each one and the fix</caption>
+            <caption id="h-wrong-table" class="vh">Search failures, the cause of each one and the fix</caption>
             <thead><tr><th scope="col">What I saw</th><th scope="col">Why</th><th scope="col">The fix</th></tr></thead>
             <tbody>
               <tr><th scope="row">Common words beat the right answer</th><td>Asked about the Christmas bonus, magazine pages full of “days” and “December” outranked the labour-law article that answers it. Postgres's ranking has no idea which words are rare.</td><td>Each matching word scores by how rare it is in the index. The built-in rank only breaks ties.</td></tr>
@@ -579,23 +606,23 @@ html,body{margin:0}
               <tr><th scope="row">It refused without looking</th><td>A safety rule, “only answer SITIMM questions”, made it turn away questions about allied unions whose answers were in the index.</td><td>Search first, then decide what's off-topic. Unrelated requests and attempts to extract the prompt are still refused.</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </section>
 
       <section class="doc" aria-labelledby="h-numbers">
         <h2 id="h-numbers">How I knew</h2>
-        <div class="table-wrap" role="region" aria-labelledby="h-numbers" tabindex="0">
+        <section class="table-wrap" aria-labelledby="h-numbers-table" tabindex="0">
           <table class="data">
-            <caption class="vh">Measures before and after</caption>
+            <caption id="h-numbers-table" class="vh">Measures before and after</caption>
             <thead><tr><th scope="col">Measure</th><th scope="col" class="num">Before</th><th scope="col" class="num">After</th></tr></thead>
             <tbody>
               <tr><th scope="row">Test questions that found the expected source</th><td class="num">9 of 16</td><td class="num">13 of 16</td></tr>
-              <tr><th scope="row">Questions about allied organisations answered</th><td class="num">0 of 6</td><td class="num">6 of 6</td></tr>
+              <tr><th scope="row">Questions about allied organizations answered</th><td class="num">0 of 6</td><td class="num">6 of 6</td></tr>
               <tr><th scope="row">Questions end to end through the public API</th><td class="num">17 of 18</td><td class="num">18 of 18</td></tr>
               <tr><th scope="row">Keyword query, test database</th><td class="num">4–15 s</td><td class="num">36–83 ms</td></tr>
             </tbody>
           </table>
-        </div>
+        </section>
         <p>Unit tests with fake models were green the whole time. One bug only showed up against the real API: on its last round the model wrote a tool call as plain text until it ran out of tokens. Only the evaluation against the real thing caught it.</p>
       </section>
 
@@ -619,7 +646,7 @@ html,body{margin:0}
     </main>
 
     <footer class="foot">
-      <a href="https://www.linkedin.com/in/eduglezzvl94">LinkedIn</a><a href="https://github.com/kerbero1994">GitHub</a><span>© 2026 Eduardo González</span>
+      <a href="https://www.linkedin.com/in/eduglezzvl94">LinkedIn</a><a href="https://github.com/kerbero1994">GitHub</a><a href="https://github.com/kerbero1994/kerbero94.dev">Source</a><span>© 2026 Eduardo González</span>
     </footer>
   </div>
   <p class="vh" id="style-status" aria-live="polite"></p>
@@ -658,7 +685,7 @@ html,body{margin:0}
 </script>
 <script>
 document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',async()=>{
-  const v=b.closest('figure').querySelector('video');
+  const v=document.querySelector('.tour video');
   v.currentTime=+b.dataset.seek;v.play();
 }));
 </script>
