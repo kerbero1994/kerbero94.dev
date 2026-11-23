@@ -345,6 +345,8 @@ html,body{margin:0}
 .site[data-style=retro] .btn:active,.site[data-style=retro] .style-btn:active{border-style:inset;transform:none}
 .site[data-style=retro] .btn-primary{outline:1px solid #000;font-weight:700}
 .site[data-style=retro] .style-btn .sw{color:#fff}
+/* the Retro swatch keeps its teal background in every style: white text passes 4.5:1, black does not */
+.site .sw[data-style=retro]{color:#fff}
 .site[data-style=retro] .btn-link{border:0;background:transparent;color:var(--accent)}
 .site[data-style=retro] main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1.5rem;margin-top:2rem}
 .site[data-style=retro] main>section{margin-top:0;padding:3px 3px 1.1rem;background:#C0C0C0;border:2px outset #e8e8e8}
@@ -511,6 +513,7 @@ html[data-vt=retro]::view-transition-new(root){transform-origin:4% 6%;animation:
       <a class="name" href="/" aria-current="page">Eduardo González</a>
       <nav aria-label="Main"><ul>
         <li><a href="#work">Work</a></li>
+        <li><a href="/architecture/">Architecture</a></li>
       </ul></nav>
       <div class="prefs">
         <button type="button" class="style-btn" popovertarget="style-picker"><span class="sw" aria-hidden="true">Aa</span>Style<span class="vh">:</span> <span id="style-current" class="vh"></span></button>
@@ -600,6 +603,13 @@ html[data-vt=retro]::view-transition-new(root){transform-origin:4% 6%;animation:
               <h3><a href="/sitimmvito/">Teaching an assistant to find the right answer</a></h3>
               <p>An outage on a Saturday, and by Sunday the app's assistant searched everything the union publishes, inside the Postgres it already had.</p>
               <p class="meta">Backend · October 2026 · PostgreSQL, pgvector, FastAPI</p>
+            </div>
+          </li>
+          <li class="case">
+            <div class="case-body">
+              <h3><a href="/architecture/">How the platform is built</a></h3>
+              <p>The system design behind SITIMM: one API for three frontends, a contract across five repos, and why CI moved to the laptop when the budget ran out.</p>
+              <p class="meta">Architecture · 2026 · System design, CI/CD, trade-offs</p>
             </div>
           </li>
           <li class="case">

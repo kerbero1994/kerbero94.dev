@@ -339,6 +339,8 @@ html,body{margin:0}
 .site[data-style=retro] .btn:active,.site[data-style=retro] .style-btn:active{border-style:inset;transform:none}
 .site[data-style=retro] .btn-primary{outline:1px solid #000;font-weight:700}
 .site[data-style=retro] .style-btn .sw{color:#fff}
+/* the Retro swatch keeps its teal background in every style: white text passes 4.5:1, black does not */
+.site .sw[data-style=retro]{color:#fff}
 .site[data-style=retro] .btn-link{border:0;background:transparent;color:var(--accent)}
 .site[data-style=retro] main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1.5rem;margin-top:2rem}
 .site[data-style=retro] main>section{margin-top:0;padding:3px 3px 1.1rem;background:#C0C0C0;border:2px outset #e8e8e8}
@@ -482,6 +484,7 @@ html,body{margin:0}
       <a class="name" href="/">Eduardo González</a>
       <nav aria-label="Main"><ul>
         <li><a href="/#work" aria-current="page">Work</a></li>
+        <li><a href="/architecture/">Architecture</a></li>
       </ul></nav>
       <div class="prefs">
         <button type="button" class="style-btn" popovertarget="style-picker"><span class="sw" aria-hidden="true">Aa</span>Style<span class="vh">:</span> <span id="style-current" class="vh"></span></button>
