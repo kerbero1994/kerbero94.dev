@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with: { node-version: 22 }
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with: { pattern: result-*, path: artifacts }
       - name: Create or update the report comment
         env:
