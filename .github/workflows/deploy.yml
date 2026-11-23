@@ -1,10 +1,10 @@
 # Production: a merge to main that changes the published site runs the same gate as
 # pull requests, on exactly what ships, then deploys to the "production" environment
-# (main only), smoke-tests kerbero94.dev, requires an Observatory A+, and reports back
-# on the merged pull request.
+# (main only), smoke-tests kerbero94.dev, requires an Observatory A+, tags a release
+# (vYYYY.MM.DD[.N], notes from the merged pull requests) and reports back on the PR.
 # Each production deploy costs 15 of the 300 monthly Netlify credits and the site
 # pauses when they run out, so dependency updates (outside site/) don't deploy.
-# Rollback: Netlify > Deploys > the previous one > Publish deploy (no credits).
+# Rollback: run the Rollback workflow (restores the previous deploy, no credits).
 name: Deploy
 
 on:
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read
+      contents: write # the release tag
       deployments: write
       pull-requests: write
     environment:
@@ -59,6 +59,16 @@ jobs:
         run: bash checks/smoke.sh | tee smoke.txt
       - name: Security headers grade A+ (Mozilla HTTP Observatory)
         run: bash checks/observatory.sh | tee observatory.txt
+      - name: Tag a release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base="v$(date -u +%Y.%m.%d)"; tag=$base; n=1
+          while gh release view "$tag" >/dev/null 2>&1; do n=$((n + 1)); tag="$base.$n"; done
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --generate-notes \
+            --notes "Deployed to https://kerbero94.dev · Netlify deploy \`${{ steps.deploy.outputs.id }}\` · $(head -1 observatory.txt)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Report on the merged pull request
         if: always()
         env:
@@ -73,12 +83,12 @@ jobs:
 
           - Smoke test: $(grep -c '^ok' smoke.txt) checks passed ($(grep -o 'certificate: [0-9]* days left' smoke.txt))
           - $(head -1 observatory.txt)
-          - Netlify deploy \`${{ steps.deploy.outputs.id }}\`
+          - Netlify deploy \`${{ steps.deploy.outputs.id }}\` · release [${{ steps.release.outputs.tag }}](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag }})
 
-          <sub>[Run]($RUN) · rollback: Netlify › Deploys › previous deploy › Publish deploy (no credits)</sub>"
+          <sub>[Run]($RUN) · rollback: Actions › Rollback › Run workflow (restores the previous deploy, no credits)</sub>"
           else
             body="❌ **Production deploy failed** at \`${GITHUB_SHA::7}\`. [Run]($RUN)
 
-          If the Netlify step failed, production still serves the previous deploy. If a check after it failed, the new deploy is live: roll back in Netlify › Deploys › previous deploy › Publish deploy (no credits)."
+          If the Netlify step failed, production still serves the previous deploy. If a check after it failed, the new deploy is live: run Actions › Rollback (restores the previous deploy, no credits)."
           fi
           for pr in $prs; do gh pr comment "$pr" -R "${{ github.repository }}" --body "$body"; done

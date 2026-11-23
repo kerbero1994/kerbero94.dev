@@ -1,0 +1,52 @@
+# Rollback: restore a previous production deploy on Netlify. No build and no credits.
+# Leave deploy_id empty to restore the one before what's live now. Afterwards, revert the
+# faulty pull request on main, or the next deploy brings it back.
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_id:
+        description: "Netlify deploy to restore (empty = the previous production deploy)"
+        required: false
+      dry_run:
+        description: "Only show what would be restored"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://kerbero94.dev
+    permissions:
+      contents: read
+      deployments: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - name: Restore
+        id: restore
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: c35e5d83-d442-4541-adae-b92cea9da71b
+          DEPLOY_ID: ${{ inputs.deploy_id }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: bash scripts/rollback.sh | tee rollback.txt
+      - name: Smoke test kerbero94.dev
+        if: ${{ !inputs.dry_run }}
+        run: bash checks/smoke.sh
+      - if: always()
+        run: |
+          { echo "### Rollback${{ inputs.dry_run && ' (dry run)' || '' }}"; echo '```'; cat rollback.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

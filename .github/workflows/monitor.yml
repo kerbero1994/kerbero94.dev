@@ -1,6 +1,7 @@
 # Production monitoring. Daily: smoke test (pages, PDF, redirects, certificate days),
-# security headers grade (A+), DNS hardening, and the static suite (it fails 30 days
-# before security.txt expires). Mondays: Lighthouse, mobile and desktop, against the
+# security headers grade (A+), DNS hardening, the Netlify token and this period's
+# deploy count (credits), and the static suite (it fails 30 days before security.txt
+# expires). Uptime every 5 minutes lives in uptime.yml. Mondays: Lighthouse, mobile and desktop, against the
 # real CDN. A failure emails the repo owner.
 name: Monitor
 
@@ -25,6 +26,11 @@ jobs:
       - run: bash checks/smoke.sh
       - run: bash checks/observatory.sh
       - run: bash checks/dns.sh
+      - name: Netlify token and credits
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: c35e5d83-d442-4541-adae-b92cea9da71b
+        run: bash checks/netlify-account.sh
       - run: npm test
 
   lighthouse:

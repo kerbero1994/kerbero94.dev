@@ -20,6 +20,7 @@
     "html-validate": "11.21.1",
     "http-server": "14.1.1",
     "linkedom": "0.18.15",
+    "pdfjs-dist": "6.5.438",
     "playwright-core": "1.65.1"
   },
   "engines": {
